@@ -30,10 +30,10 @@ class _SpalshState extends State<Spalsh> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        backgroundColor: Colors.black38,
+        backgroundColor: Color(0xffA87B5D),
         body: Center(
           child: Image.asset(
-            "assets/images/welcome2.png",
+            "assets/images/welcome6.png",height: 355,width: 355,
             // color: Colors.white,
             fit: BoxFit.cover,
           ),

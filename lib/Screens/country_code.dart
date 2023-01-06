@@ -26,7 +26,7 @@ class _Country_CodeState extends State<Country_Code> {
               showCountryOnly: false,
               showOnlyCountryWhenClosed: false,
               showFlagMain: true,
-              favorite: ["+91", "Pak"],
+              favorite: ["+92", "Pak"],
               enabled: true,
               showFlag: true,
             ),      

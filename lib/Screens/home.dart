@@ -1,138 +1,123 @@
-import 'dart:html';
-import 'dart:js';
-import 'dart:ui';
+// import 'dart:ffi';
 
-import 'package:flutter/material.dart';
-import 'package:maps/Screens/Login.dart';
-import 'package:maps/Screens/maps.dart';
-import 'package:image_picker/image_picker.dart';
-class home extends StatefulWidget {
-  const home({Key? key}) : super(key: key);
-  @override
-  State<home> createState() => _homeState();
-}
-class _homeState extends State<home> {
-  PickedFile _imageFile;
-  final ImagePicker _picker= ImagePicker();
-  int myindex=0;
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        body: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            imageprofile(),
-            SizedBox(
-              height: 20,
-            ),
-          ],
-        ),
-        bottomNavigationBar: BottomNavigationBar(
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: Color(0xffA87B5D),
-          showSelectedLabels: true,
-          selectedItemColor: Colors.white,
-          iconSize: 30,
-          onTap: (index) {
-            setState(() {
-              myindex=index;
-            });  
-          },
-          currentIndex: myindex,
-          items:[
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              label: "Home"
-               ),
-               BottomNavigationBarItem(
-              icon: Icon(Icons.location_on_outlined),
-              label: "MAPS"
-               ),
-          ] 
-          ),
-          // body: IndexedStack(
-          //   children: widgetList,
-          //   index: myindex,
-          // ),
-    ),
-    );
-  }
-Widget imageprofile(){
-  return Center(
-    child: Stack(
-      children: [
-        CircleAvatar(
-          radius: 80.0,
-          backgroundImage: _imageFile==null
-          ? AssetImage("assets/images/Baber.photho.jpg")
-          :FileImage(File(_imageFile.path)),
-        ),
-        Positioned(
-          bottom: 20.0,
-          right: 20.0,
-          child: InkWell(
-            onTap: (){
-              // showModalBottomSheet(
-              //   // context : context,
-              //   builder: ((builder)=> bottomsheet()),
-              // );
-            },
-            child: Icon(
-              Icons.camera_alt,
-              color: Colors.teal,
-              size: 28.0,
-            ),
-          ),
-        ),
-      ]
-    ),
-  );
-}
-Widget bottomsheet(){
-  return Container(
-    height: 100.0,
-    width: 100.0,
-    margin: EdgeInsets.symmetric(
-      horizontal: 20,
-      vertical: 20,
-    ),
-    child: Column(
-      children: [
-        Text("Choose Profile Photo",
-        style: TextStyle(
-          fontSize: 20.0,
-        ),
-        ),
-        SizedBox(
-          height: 20.0,
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            FlatButton.icon(icon: Icon(Icons.camera),
-            onPressed: (){
-              takePhotho(CanvasImageSource.camera);
-            },
-            label: Text("Camera"),
-            ),
-            FlatButton.icon(icon: Icon(Icons.image),
-            onPressed: (){},
-            
-            label: Text("Gallery"),
-            ),
+// import 'dart:io';
+// import 'dart:ui';
+// import 'package:flutter/material.dart';
+// import 'package:flutter/services.dart';
+// import 'package:image_picker/image_picker.dart';
+// import 'package:maps/Screens/Login.dart';
+// import 'package:maps/Screens/maps.dart';
+// import 'package:maps/Screens/signup.dart';
+// import 'package:path_provider/path_provider.dart';
+// import 'package:path/path.dart';
+// class home extends StatefulWidget {
 
-          ],
-        )
-      ],
-    ),
-  );
-}
-void takePhotho(CanvasImageSource source) async{
-  final PickedFile = await _picker.getImage(
-    source:source,
-  );
-  SetState((){
-    _imageFile= pickedFile;
-  });
-}
+  
+//   const home({Key? key}) : super(key: key);
+//   @override
+//   State<home> createState() => _homeState();
+// }
+// class _homeState extends State<home> {
+//   File?  _image;
+
+//   Future getImage(ImageSource source) async {
+//     try{
+//     final Image =  await ImagePicker().pickImage(source: ImageSource.gallery);
+//     if( Image == null ) return;
+//     // final imageTemporary = File(Image.path);
+//     final imagePermanent = await saveFilePermanently(Image.path);
+//     setState(() {
+//       this._image!= imagePermanent;
+//     });
+//     } on PlatformException catch (e) {
+//       print('Failed to Pick Image: $e');
+//     }
+//   }
+//   Future<File> saveFilePermanently(String imagePath) async{
+//     final directory= await getApplicationDocumentsDirectory();
+//     final name = basename (imagePath);
+//     final Image = File('${directory.path}/$name');
+
+//     return File(imagePath).copy(Image.path);
+    
+//   }
+//   int myindex=0;
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       bottomNavigationBar: BottomNavigationBar(
+//             type: BottomNavigationBarType.fixed,
+//             backgroundColor: Color(0xffA87B5D),
+//             showSelectedLabels: true,
+//             selectedItemColor: Colors.white,
+//             iconSize: 30,
+//             onTap: (index) {
+//               setState(() {
+//                 myindex=index;
+//               });  
+//             },
+//             currentIndex: myindex,
+//             items:[
+//               BottomNavigationBarItem(
+//                 icon: Icon(Icons.home),
+//                 label: "Home"
+//                  ),
+//                  BottomNavigationBarItem(
+//                 icon: Icon(Icons.location_on_outlined),
+//                 label: "MAPS"
+//                  ),
+//             ] 
+//             ),
+//       body: Center(
+//         child: Column(
+//           children: [
+//             SizedBox(height: 40,),
+//             _image !=null
+//             ? Image.file(_image!, width: 250,height: 250,fit:BoxFit.cover,)
+//             :Image.asset("assets/images/profilepic.jpeg", height: 100 ,width: 100,),
+
+//             SizedBox(height: 30,width: 200,
+//             child: ElevatedButton(
+//               style: ElevatedButton.styleFrom(
+//                 primary: Color(0xffA87B5D),
+//                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(55))
+//               ),
+//               onPressed:()=> getImage(ImageSource.gallery),
+//              child: Row(children: [
+//               Icon(Icons.image_outlined),
+//               Text("Pick From Gallery"),
+              
+//              ],),
+//             ), 
+//             ),
+//             // CustomButton(title: 'Pick from Gallery',
+//             //  icon: Icons.image_outlined,
+//             //   onClick:()=> getImage(ImageSource.gallery), 
+//             //   ),
+//             SizedBox(height: 30,width: 200,
+//             child: ElevatedButton(
+//               style: ElevatedButton.styleFrom(
+//                 primary: Color(0xffA87B5D),
+//                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(55))
+//               ),
+//               onPressed:()=> getImage(ImageSource.camera),
+//              child: Row(children: [
+//               Icon(Icons.camera),
+//               Text("Pick From Camera"),
+//              ],),
+//             ),
+//             ),
+//             //   CustomButton(
+//             //  title: 'Pick from Camera',
+//             //  icon: Icons.camera,
+//             //  onClick: () => getImage(ImageSource.camera), 
+//             //   ),  
+//           ],
+//         ),
+//       ),
+//     );
+    
+    
+//   }
+// }
+          

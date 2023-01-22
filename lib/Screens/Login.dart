@@ -3,6 +3,8 @@
 import 'package:country_code_picker/country_code_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:maps/Screens/Login.dart';
 import 'package:form_field_validator/form_field_validator.dart';
 import 'package:maps/Screens/home.dart';
@@ -10,16 +12,17 @@ import 'package:maps/Screens/homepage.dart';
 import 'package:maps/Screens/location.dart';
 import 'package:maps/Screens/signup.dart';
 import 'package:maps/main.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(MyApp());
 }
 
-const List<String> list = <String>[
-  'Male',
-  'Female',
-  'Custome',
-];
+// const List<String> list = <String>[
+//   'Male',
+//   'Female',
+//   'Custome',
+// ];
 
 class MyApp extends StatelessWidget {
   @override
@@ -41,8 +44,8 @@ class _LoginState extends State<Login> {
       // backgroundColor: Colors.black38,
       appBar: AppBar(
         backgroundColor: Color(0xffA87B5D),
-        elevation: 0 ,
-        title: Text(
+        elevation: 0,
+        title: const Text(
           "Login Page",
           style: TextStyle(
               fontWeight: FontWeight.bold, fontSize: 25, color: Colors.white),
@@ -62,12 +65,14 @@ class MyCustomForm extends StatefulWidget {
 }
 
 class _MyCustomFormSate extends State<MyCustomForm> {
+  bool isVisible = true;
+  String type = 'email';
   final _formKey = GlobalKey<FormState>();
   final _auth = FirebaseAuth.instance;
   bool _loading = false;
   final email = TextEditingController();
-
   final password = TextEditingController();
+  bool isEmail = false;
 
   @override
   void dispose() {
@@ -88,38 +93,168 @@ class _MyCustomFormSate extends State<MyCustomForm> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Container(
+              Container( 
                   width: 200,
                   height: 200,
                   decoration: new BoxDecoration(
                       shape: BoxShape.circle,
-                      image: new DecorationImage(
+                      image:  new DecorationImage(
                         fit: BoxFit.cover,
                         image: AssetImage("assets/images/login5.png"),
                       ))),
               SizedBox(
                 height: 50,
               ),
-              TextFormField(
-                controller: email,
-                decoration: InputDecoration(
-                  prefixIcon: Icon(Icons.email),
-                  hintText: 'Enter your  Email',
-                  label: Text('Email/Phone Number'),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(55),
-                    borderSide: BorderSide(
-                      color: Color(0xffA87B5D),
+              type == 'email'
+                  ? TextFormField(
+                      controller: email,
+                      decoration: InputDecoration(
+                        prefixIcon: Icon(Icons.email),
+                        hintText: 'Enter your  Email',
+                        label: Text('Email'),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(55),
+                          borderSide: const BorderSide(
+                            color: Color(0xffA87B5D),
+                          ),
+                        ),
+                      ),
+                      validator: MultiValidator([
+                        RequiredValidator(errorText: "Email required"),
+                        EmailValidator(errorText: "Please insert a valid email")
+                      ]),
+                    )
+                  : IntlPhoneField(
+                      decoration: InputDecoration(
+                        labelText: 'Phone Number',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(50),
+                          borderSide: const BorderSide(
+                            color: Color(0xffA87B5D),
+                          ),
+                        ),
+                      ),
+                      initialCountryCode: 'PK',
+                      onChanged: (phone) {
+                        print(phone.completeNumber);
+                      },
                     ),
-                  ),
-                ),
-                validator: MultiValidator([
-                  RequiredValidator(errorText: "Email required"),
-                  EmailValidator(errorText: "Please insert a valid email")
-                ]),
+              SizedBox ( 
+                height: 5,
               ),
-              SizedBox(height: 50),
+              Row(
+                children: [
+                  isEmail
+                      ? TextButton(
+                          onPressed: () {
+                            setState(() {
+                              isEmail = false;
+                              type = 'email';
+                            });
+                          },
+                          child: const Text(
+                            "Use Email",
+                            style: TextStyle(
+                              color: Colors.redAccent,
+                              fontWeight: FontWeight.bold,
+                              fontStyle: FontStyle.italic,
+                              fontFamily: 'RaleWay',
+                            ),
+                          ),
+                        )
+                      : TextButton(
+                          onPressed: () {
+                            setState(() {
+                              isEmail = true;
+                              type = 'number';
+                            });
+                          },
+                          child: const Text(
+                            "Use Phone Number Instead?",
+                            style: TextStyle(
+                              color: Colors.redAccent,
+                              fontWeight: FontWeight.bold,
+                              fontStyle: FontStyle.italic,
+                              fontFamily: 'RaleWay',
+                            ),
+                          ),
+                        ),
+                ],
+              ),
+              // type == 'email'
+              //     ? TextButton(
+              //         onPressed: () {
+              //           setState(() {
+              //             type = 'email';
+              //           });
+              //         },
+              //         child: Text("Hello"),
+              //       )
+              //     : TextButton(
+              //         onPressed: () {
+              //           setState(() {
+              //             type = 'number';
+              //           });
+              //         },
+              //         child: Text("Baber"),
+              //       ),
+              // Visibility(
+              //   visible: isVisible,
+              //   child: TextFormField(
+              //     controller: email,
+              //     decoration: InputDecoration(
+              //       prefixIcon: Icon(Icons.email),
+              //       hintText: 'Enter your  Email',
+              //       label: Text('Email'),
+              //       border: OutlineInputBorder(
+              //         borderRadius: BorderRadius.circular(55),
+              //         borderSide: BorderSide(
+              //           color: Color(0xffA87B5D),
+              //         ),
+              //       ),
+              //     ),
+              //     validator: MultiValidator([
+              //       RequiredValidator(errorText: "Email required"),
+              //       EmailValidator(errorText: "Please insert a valid email")
+              //     ]),
+              //   ),
+              // ),
+//               RaisedButton(
+//                 child:IntlPhoneField(
+
+//     decoration: InputDecoration(
+//         labelText: 'Phone Number',
+//         border: OutlineInputBorder(
+//           borderRadius: BorderRadius.circular(50),
+//             borderSide: BorderSide(
+//               color: Color(0xffA87B5D),
+//             ),
+//         ),
+//     ),
+//     initialCountryCode: 'PK',
+//     onChanged: (phone) {
+//         print(phone.completeNumber);
+//     },
+// ),
+//                 onPressed: () {
+//                 setState(() {
+//                   isVisible= ! isVisible;
+//                 });
+//               },),
+              // SizedBox(height: 08),
+              // Row(
+              //   children: [
+              //     Padding(
+              //       padding: EdgeInsets.fromLTRB(80, 0, 0, 0),
+              //     ),
+              //   ],
+              // ),
+              SizedBox(height: 20),
               TextFormField(
+                // onSaved: (newValue) {
+                //   password.text = newValue!;
+                //   _savePassword(newValue);
+                // },
                 controller: password,
                 obscureText: true,
                 decoration: InputDecoration(
@@ -128,12 +263,12 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                   label: Text('Password'),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(55),
-                    borderSide: BorderSide(
+                    borderSide: const BorderSide(
                       color: Color(0xffA87B5D),
                     ),
                   ),
                 ),
-                validator: MultiValidator([ 
+                validator: MultiValidator([
                   RequiredValidator(errorText: 'password is required'),
                   MinLengthValidator(8,
                       errorText: 'password must be least 8 digits long'),
@@ -142,8 +277,7 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                           'passwords must have at least one special character')
                 ]),
               ),
-              SizedBox(height: 20),
-              SizedBox(height: 30),
+              SizedBox(height: 50),
               SizedBox(
                 height: 40,
                 width: 150,
@@ -161,8 +295,14 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                               color: Colors.white,
                               fontSize: 20),
                         ),
-                  onPressed: () {
+                  onPressed: () async {
+                    
+
                     if (_formKey.currentState!.validate()) {
+                      final SharedPreferences sharedPreferences =
+                            await SharedPreferences.getInstance();
+                        sharedPreferences.setString(
+                            'email', email.text);
                       setState(() {
                         _loading = true;
                       });
@@ -174,11 +314,11 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                         setState(() {
                           _loading = false;
                         });
-                        Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(
-                            builder: (context) => Location(),
-                          ),
-                        );
+
+                        Navigator.pushAndRemoveUntil(
+                            (context),
+                            MaterialPageRoute(builder: (context) => homepage()),
+                            (route) => false);
                       }).onError((error, stackTrace) {
                         setState(() {
                           _loading = false;
@@ -188,35 +328,38 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                   },
                 ),
               ),
-              Row(
-                children: [
-                  Text(
-                    "Already have an Account?",
-                    style: TextStyle(
-                        fontSize: 20,
-                        color: Color.fromARGB(255, 2, 1, 1),
-                        fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(
-                    height: 200,
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (context) => Signup()),
-                      );
-                    },
-                    child: Text(
-                      "Sign Up",
+              FittedBox(
+                fit: BoxFit.fitWidth,
+                child: Row(
+                  children: [
+                    Text(
+                      "Already have an Account?",
                       style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 22,
-                        color: Color(0xffA87B5D),
-                        decoration: TextDecoration.underline,
+                          fontSize: 20,
+                          color: Color.fromARGB(255, 2, 1, 1),
+                          fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(
+                      height: 150,
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (context) => Signup()),
+                        );
+                      },
+                      child: Text(
+                        "Sign Up",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 22,
+                          color: Color(0xffA87B5D),
+                          decoration: TextDecoration.underline,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),

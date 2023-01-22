@@ -1,9 +1,15 @@
 import 'dart:io';
 import 'dart:ui';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_3d_choice_chip/flutter_3d_choice_chip.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:maps/Screens/ImagePicke.dart';
+import 'package:maps/Screens/Splash.dart';
 import 'package:maps/Screens/maps.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
 
@@ -40,6 +46,15 @@ class homepage extends StatefulWidget {
 }
 
 class _homepageState extends State<homepage> {
+  final ref = FirebaseDatabase.instance.ref("User");
+  
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    getUserCurrentLocation();
+  }
+  
   int _selectedIndex = 0;
   static const List<Widget> _widgetOptions = <Widget>[
     ImagePick(),
@@ -50,7 +65,61 @@ class _homepageState extends State<homepage> {
       _selectedIndex = index;
     });
   }
+  getUserCurrentLocation() async {
+    await Geolocator.requestPermission()
+        .then((value) {})
+        .onError((error, stackTrace) {
+      print("error==>>" + error.toString());
+    });
+     await Geolocator.getCurrentPosition().then((value) async {
+            print("My Current Location");
+            // print(value.latitude.toString() +
+            //     "     " +
+            //     value.longitude.toString());
 
+            List<Placemark> placemarks =
+                await placemarkFromCoordinates(value.latitude, value.longitude);
+            setState(() {
+              LatitudeAddress = value.latitude;
+
+              longitudeAddress = value.longitude;
+              // print("longitudeAddress+  " " + LatitudeAddress");
+              address = placemarks.reversed.last.subLocality.toString()+
+                  " " +
+                  placemarks.reversed.last.locality.toString() +
+                  " " +
+                  placemarks.reversed.last.country.toString();
+                  print("address");
+                  print(address);
+                  ref.child(FirebaseAuth.instance.currentUser!.uid).update(
+                    {"location": address },
+                  ).then((value) {
+                    Fluttertoast.showToast(
+                        msg: "Location Added Successfully",
+                        toastLength: Toast.LENGTH_SHORT,
+                        gravity: ToastGravity.CENTER,
+                        timeInSecForIosWeb: 1,
+                        backgroundColor: Color(0xffA87B5D),
+                        textColor: Colors.white,
+                        fontSize: 16.0);
+                  }).onError((error, stackTrace) {
+                    Fluttertoast.showToast(
+                        msg: "Something went wrong try again",
+                        toastLength: Toast.LENGTH_SHORT,
+                        gravity: ToastGravity.CENTER,
+                        timeInSecForIosWeb: 1,
+                        backgroundColor: Colors.red,
+                        textColor: Colors.white,
+                        fontSize: 16.0);
+                  });
+});
+            });
+            }
+  
+
+  String address = "";
+  double? longitudeAddress;
+  double? LatitudeAddress;
   @override
   Widget build(BuildContext context) {
     return Scaffold(

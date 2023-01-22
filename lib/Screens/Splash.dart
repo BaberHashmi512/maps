@@ -1,8 +1,13 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:maps/Screens/Login.dart';
+import 'package:maps/Screens/homepage.dart';
+import 'package:maps/Screens/sadam.dart';
 import 'package:maps/main.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+String? emailStored;
 
 class Spalsh extends StatefulWidget {
   const Spalsh({Key? key}) : super(key: key);
@@ -13,17 +18,32 @@ class Spalsh extends StatefulWidget {
 class _SpalshState extends State<Spalsh> {
   @override
   void initState() {
-    Timer(
-      Duration(seconds: 5),
+    getValidation().whenComplete(
       () {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => Login(),
-          ),
+        Timer( const
+          Duration(seconds: 1),
+          () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    emailStored == null ? Login() : homepage(),
+              ),
+            );
+          },
         );
       },
     );
     super.initState();
+  }
+
+  Future getValidation() async {
+    final SharedPreferences sharedPreferences =
+        await SharedPreferences.getInstance();
+    var getemail = sharedPreferences.getString('email');
+    setState(() {
+      emailStored = getemail;
+    });
   }
 
   @override
@@ -33,7 +53,7 @@ class _SpalshState extends State<Spalsh> {
         backgroundColor: Color(0xffA87B5D),
         body: Center(
           child: Image.asset(
-            "assets/images/welcome6.png",height: 355,width: 355,
+            "assets/images/welcome6.png", height: 355, width: 355,
             // color: Colors.white,
             fit: BoxFit.cover,
           ),

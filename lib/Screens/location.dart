@@ -1,10 +1,12 @@
 import 'dart:async';
+// import 'dart:html';
 
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:maps/Screens/homepage.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class Location extends StatefulWidget {
   @override
@@ -12,6 +14,11 @@ class Location extends StatefulWidget {
 }
 
 class _LocationState extends State<Location> {
+  @override
+  void initState() {
+    // TODO: implement initState
+    
+  }
   
 bool _buttonDisabled = false;
 
@@ -48,7 +55,16 @@ void _onButtonPressed() {
             if (_currentAddress != null) Text(_currentAddress!),
             FlatButton(
                 child: Text("Get location"),
-              onPressed: () {
+              onPressed: () async {
+                PermissionStatus locationstatus = await Permission.locationWhenInUse.request();
+                if(locationstatus == PermissionStatus.granted){}
+                if(locationstatus == PermissionStatus.denied){
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text("This Permisson is Recomended")));
+                }
+                if(locationstatus == PermissionStatus.permanentlyDenied){
+                  openAppSettings();
+                }
                 _getCurrentLocation();
               },
             ),

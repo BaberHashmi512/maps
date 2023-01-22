@@ -3,8 +3,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:country_code_picker/country_code_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:intl_phone_field/intl_phone_field.dart';
+import 'package:intl_phone_field/phone_number.dart';
 import 'package:maps/Screens/Login.dart';
 import 'package:form_field_validator/form_field_validator.dart';
 import 'package:maps/Screens/User_Model.dart';
@@ -14,11 +17,11 @@ void main() {
   runApp(MyApp());
 }
 
-const List<String> list = <String>[
-  'Male',
-  'Female',
-  'Custome',
-];
+// const List<String> list = <String>[
+//   'Male',
+//   'Female',
+//   'Custome',
+// ];
 
 class MyApp extends StatelessWidget {
   @override
@@ -33,6 +36,7 @@ class Signup extends StatefulWidget {
 }
 
 class _SignupState extends State<Signup> {
+  final referDatabasse = FirebaseDatabase.instance.ref("User");
 //  int? _value = 1;
   @override
   Widget build(BuildContext context) {
@@ -56,14 +60,17 @@ class MyCustomForm extends StatefulWidget {
 }
 
 class _MyCustomFormSate extends State<MyCustomForm> {
+  String type = 'email';
   final name = TextEditingController();
   final lastname = TextEditingController();
+  final number = TextEditingController();
   final email = TextEditingController();
   final password = TextEditingController();
   final Confirmpassword = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   final FirebaseAuth _auth = FirebaseAuth.instance;
   bool _loading = false;
+  bool isEmail = false;
   String? errorMessage;
 
   @override
@@ -91,8 +98,8 @@ class _MyCustomFormSate extends State<MyCustomForm> {
             children: [
               TextFormField(
                 onSaved: (value) {
-          name.text = value!;
-        },
+                  name.text = value!;
+                },
                 controller: name,
                 decoration: InputDecoration(
                   prefixIcon: Icon(Icons.person),
@@ -100,14 +107,12 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                   label: Text('First Name'),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(55),
-                    borderSide: BorderSide(
+                    borderSide: const BorderSide(
                       color: Color(0xffA87B5D),
                     ),
                   ),
 
-                  // border: OutlineInputBorder(
-
-                  // ),
+                 
                 ),
                 validator: MultiValidator([
                   RequiredValidator(errorText: "Name required"),
@@ -115,38 +120,19 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                       errorText: "Name must be at least of 3 chars"),
                 ]),
               ),
-              SizedBox(height: 20),
-              // TextFormField(
-              //   decoration: InputDecoration(
-              //     hintText: 'Enter your name',
-              //     label: Text('Middle Name'),
-              //     border: OutlineInputBorder(
-              //       borderRadius: BorderRadius.circular(55),
-              //       borderSide: BorderSide(
-              //         color: Color(0xffA87B5D),
-              //       ),
-              //     ),
-              //   ),
-              //   validator: MultiValidator([
-              //     RequiredValidator(errorText: "Name required"),
-              //     MinLengthValidator(3,
-              //         errorText: "Name must be at least of 3 chars"),
-              //   ]),
-              // ),
-              const SizedBox(height: 20),
+              SizedBox(height: 30),
               TextFormField(
                 controller: lastname,
                 onSaved: (value) {
-          lastname.text = value!;
-        },
+                  lastname.text = value!;
+                },
                 decoration: InputDecoration(
                   prefixIcon: Icon(Icons.person),
                   hintText: 'Enter your name',
                   label: Text('Last Name'),
                   border: OutlineInputBorder(
-                    
                     borderRadius: BorderRadius.circular(55),
-                    borderSide: BorderSide(
+                    borderSide: const BorderSide(
                       color: Color(0xffA87B5D),
                     ),
                   ),
@@ -157,67 +143,88 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                       errorText: "Name must be at least of 3 chars"),
                 ]),
               ),
-
-              GestureDetector(
-                onTap: () {
-                  CountryCodePicker(
-                    initialSelection: "+92",
-                    showCountryOnly: false,
-                    showOnlyCountryWhenClosed: false,
-                    showFlagMain: true,
-                    favorite: ["+92", "Pak"],
-                    enabled: true,
-                    showFlag: true,
-                  );
-                },
-                child: DropdownButtonExample(),
-                // child: Text(
-                //   "USe Number Instead??",
-                //   style: TextStyle(fontSize: 10.0, color: Colors.red),
-                // ),
-              ),
-              SizedBox(height: 20),
-              TextFormField(
-                onSaved: (value) {
-          email.text = value!;
-        },
-                controller: email,
-                decoration: InputDecoration(
-
-                  hintText: 'Enter your  Email',
-                  prefixIcon: Icon(Icons.email),
-                  label: Text('Email'),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(55),
-                    borderSide: BorderSide(
-                      color: Color(0xffA87B5D),
+              SizedBox(height: 30),
+              type == 'email'
+                  ? TextFormField(
+                      controller: email,
+                      decoration: InputDecoration(
+                        prefixIcon: Icon(Icons.email),
+                        hintText: 'Enter your  Email',
+                        label: Text('Email'),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(55),
+                          borderSide:const BorderSide(
+                            color: Color(0xffA87B5D),
+                          ),
+                        ),
+                      ),
+                      validator: MultiValidator([
+                        RequiredValidator(errorText: "Email required"),
+                        EmailValidator(errorText: "Please insert a valid email")
+                      ]),
+                    )
+                  : IntlPhoneField(
+                      controller: number,
+                      decoration: InputDecoration(
+                        labelText: 'Phone Number',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(50),
+                          borderSide:const BorderSide(
+                            color: Color(0xffA87B5D),
+                          ),
+                        ),
+                      ),
+                      initialCountryCode: 'PK',
+                      onChanged: (phone) {
+                        print(phone.completeNumber);
+                      },
                     ),
-                  ),
-                ),
-                validator: MultiValidator([
-                  RequiredValidator(errorText: "Email required"),
-                  EmailValidator(errorText: "Please insert a valid email")
-                ]),
+              SizedBox(
+                height:  5,
               ),
-
-              // TextFormField(
-              //   keyboardType: TextInputType.number,
-              //   decoration: const InputDecoration(
-              //     hintText: 'Phone number',
-              //     label: Text('Phone'),
-              //     border: OutlineInputBorder(),
-              //   ),
-              //   validator: MultiValidator([
-              //     RequiredValidator(errorText: "Phone number required"),
-              //     PatternValidator(r'^(?:[+0][1-9])?[0-9]{10,12}$',
-              //         errorText: ''),
-              //   ]),
-              // ),
+              Row(
+                children: [
+                  isEmail
+                      ? TextButton(
+                          onPressed: () {
+                            setState(() {
+                              isEmail = false;
+                              type = 'email';
+                            });
+                          },
+                          child:const Text(
+                            "Use Email",
+                            style: TextStyle(
+                                color: Colors.redAccent,
+                                fontWeight: FontWeight.bold,
+                                fontStyle: FontStyle.italic,
+                                fontFamily: 'RaleWay'),
+                          ),
+                        )
+                      : TextButton(
+                          onPressed: () {
+                            setState(() {
+                              isEmail = true;
+                              type = 'number';
+                            });
+                          },
+                          child: const Text(
+                            "Use Phone Number Instead?",
+                            style: TextStyle(
+                              color: Colors.redAccent,
+                              fontWeight: FontWeight.bold,
+                              fontStyle: FontStyle.italic,
+                              fontFamily: 'RaleWay',
+                            ),
+                          ),
+                        ),
+                ],
+              ),
               SizedBox(height: 20),
               TextFormField(
                 onSaved: (value) {
-          password.text = value!;
-        },
+                  password.text = value!;
+                },
                 controller: password,
                 obscureText: true,
                 decoration: InputDecoration(
@@ -226,7 +233,7 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                   label: Text('Password'),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(55),
-                    borderSide: BorderSide(
+                    borderSide: const BorderSide(
                       color: Color(0xffA87B5D),
                     ),
                   ),
@@ -240,11 +247,11 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                           'passwords must have at least one special character')
                 ]),
               ),
-              SizedBox(height: 20),
+              SizedBox(height: 30),
               TextFormField(
                 onSaved: (value) {
-          Confirmpassword.text = value!;
-        },
+                  Confirmpassword.text = value!;
+                },
                 controller: Confirmpassword,
                 obscureText: true,
                 decoration: InputDecoration(
@@ -253,7 +260,7 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                   label: Text('Confirm Password'),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(55),
-                    borderSide: BorderSide(
+                    borderSide:const BorderSide(
                       color: Color(0xffA87B5D),
                     ),
                   ),
@@ -268,65 +275,60 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                 ]),
               ),
               SizedBox(height: 20),
-              Text(
+              Text( 
                 "Gender",
-                style: TextStyle(
+                style:  TextStyle(
                     fontWeight: FontWeight.w900,
                     color: Color(0xffA87B5D),
                     fontSize: 30),
               ),
-              Row(
-                children: [
-                  Row(
-                    children: [
-                      Radio(
-                          // value: _value,
-                          value: genderPerson.male,
-                          groupValue: _value,
-                          onChanged: (genderPerson? value) {
-                            setState(() {
-                              _value = value!;
-                            });
-                          }),
-                      SizedBox(
-                        width: 10,
-                      ),
-                      Text("Male"),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      Radio(
-                          value: genderPerson.female,
-                          groupValue: _value,
-                          onChanged: (genderPerson? value) {
-                            setState(() {
-                              _value = value!;
-                            });
-                          }),
-                      SizedBox(
-                        width: 10,
-                      ),
-                      Text("Female"),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      Radio(
-                          value: genderPerson.other,
-                          groupValue: _value,
-                          onChanged: (genderPerson? value) {
-                            setState(() {
-                              _value = value!;
-                            });
-                          }),
-                      SizedBox(
-                        width: 10,
-                      ),
-                      Text("Custom"),
-                    ],
-                  ),
-                ],
+              Container(
+                width: double.infinity,
+                height: 50.0,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  children: [
+                    Radio(
+                        value: _value,
+                        groupValue: genderPerson.male,
+                        onChanged: (genderPerson? value) {
+                          setState(() {
+                            _value = value!;
+                            print(genderPerson.male.name);
+                          });
+                        }),
+                    SizedBox(
+                      width: 10,
+                    ),
+                    Text("Male"),
+                    Radio(
+                        value: _value,
+                        groupValue: genderPerson.female,
+                        onChanged: (genderPerson? value) {
+                          setState(() {
+                            _value = value!;
+                            print(genderPerson.female.name);
+                          });
+                        }),
+                    SizedBox(
+                      width: 10,
+                    ),
+                    Text("Female"),
+                    Radio(
+                        value: _value,
+                        groupValue: genderPerson.other,
+                        onChanged: (genderPerson? value) {
+                          setState(() {
+                            _value = value!;
+                            print(genderPerson);
+                          });
+                        }),
+                    SizedBox(
+                      width: 10,
+                    ),
+                    Text("Custome"),
+                  ],
+                ),
               ),
               SizedBox(height: 30),
               SizedBox(
@@ -339,7 +341,7 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                   ),
                   child: _loading
                       ? CircularProgressIndicator()
-                      : Text(
+                      : Text( 
                           "Sign Up",
                           style: TextStyle(
                               fontWeight: FontWeight.bold,
@@ -347,7 +349,7 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                               fontSize: 20),
                         ),
                   onPressed: () {
-signUp(email.text, password.text);
+                    signUp(email.text, password.text);
                   },
                 ),
               ),
@@ -357,12 +359,19 @@ signUp(email.text, password.text);
       ),
     );
   }
-    void signUp(String email, String password) async {
+  void signUp(String email, String password) async {
     if (_formKey.currentState!.validate()) {
+      setState(() {
+        _loading = true;
+      });
       try {
         await _auth
             .createUserWithEmailAndPassword(email: email, password: password)
-            .then((value) => {postDetailsToFirestore()})
+            .then((value) => {
+                  postdetailsrealtimedatabase()
+
+                  // postDetailsToFirestore()
+                })
             .catchError((e) {
           Fluttertoast.showToast(msg: e!.message);
         });
@@ -394,6 +403,45 @@ signUp(email.text, password.text);
       }
     }
   }
+
+  postdetailsrealtimedatabase() async {
+    print("callfunction");
+    final referDatabasse = FirebaseDatabase.instance.ref("User");
+    User? user = _auth.currentUser;
+    referDatabasse.child(user!.uid).set({
+      "id": user.uid.toString(),
+      "email": email.text,
+      'number': '8856061841',
+      "firsname": name.text,
+      "lastname": lastname.text,
+      "password": password.text,
+      "confirmpassword": Confirmpassword.text,
+      "gender": "Male",
+      "location": "",
+    }).then((value) {
+      Fluttertoast.showToast(
+          msg: "Account Created Successfully",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.CENTER,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Color(0xffA87B5D),
+          textColor: Colors.white,
+          fontSize: 16.0);
+      Navigator.pushAndRemoveUntil((context),
+          MaterialPageRoute(builder: (context) => Login()), (route) => false);
+    }).onError((error, stackTrace) {
+      Fluttertoast.showToast(
+        msg: error.toString(),
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.CENTER,
+        timeInSecForIosWeb: 1,
+        backgroundColor: Color(0xffA87B5D),
+        textColor: Colors.white,
+        fontSize: 16.0,
+      );
+    });
+  }
+
   postDetailsToFirestore() async {
     // calling our firestore
     // calling our user model
@@ -416,49 +464,7 @@ signUp(email.text, password.text);
         .set(userModel.toMap());
     Fluttertoast.showToast(msg: "Account created successfully :) ");
 
-    Navigator.pushAndRemoveUntil(
-        (context),
-        MaterialPageRoute(builder: (context) => Login()),
-        (route) => false);
-  }
-}
-
-// class _value {
-// }
-
-class DropdownButtonExample extends StatefulWidget {
-  const DropdownButtonExample({super.key});
-
-  @override
-  State<DropdownButtonExample> createState() => _DropdownButtonExampleState();
-}
-
-class _DropdownButtonExampleState extends State<DropdownButtonExample> {
-  String dropdownValue = list.first;
-
-  @override
-  Widget build(BuildContext context) {
-    return DropdownButton<String>(
-      value: dropdownValue,
-      // icon: const Icon(Icons.arrow_downward),
-      elevation: 16,
-      style: const TextStyle(color: Color(0xffA87B5D)),
-      underline: Container(
-        height: 4,
-        color: Color(0xffA87B5D),
-      ),
-      onChanged: (String? value) {
-        // This is called when the user selects an item.
-        setState(() {
-          dropdownValue = value!;
-        });
-      },
-      items: list.map<DropdownMenuItem<String>>((String value) {
-        return DropdownMenuItem<String>(
-          value: value,
-          child: Text(value),
-        );
-      }).toList(),
-    );
+    Navigator.pushAndRemoveUntil((context),
+        MaterialPageRoute(builder: (context) => Login()), (route) => false);
   }
 }

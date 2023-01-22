@@ -22,7 +22,6 @@ class UserModel {
       'email': email,
       'firstname': firstname,
       'lastname': lastname,
-
     };
   }
 

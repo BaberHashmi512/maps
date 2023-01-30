@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:get/get.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:intl_phone_field/phone_number.dart';
 import 'package:maps/Screens/Login.dart';
@@ -17,11 +18,11 @@ void main() {
   runApp(MyApp());
 }
 
-// const List<String> list = <String>[
-//   'Male',
-//   'Female',
-//   'Custome',
-// ];
+const List<String> list = <String>[
+  'Male',
+  'Female',
+  'Custome',
+];
 
 class MyApp extends StatelessWidget {
   @override
@@ -71,6 +72,7 @@ class _MyCustomFormSate extends State<MyCustomForm> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   bool _loading = false;
   bool isEmail = false;
+  int? _value = 1;
   String? errorMessage;
 
   @override
@@ -84,7 +86,8 @@ class _MyCustomFormSate extends State<MyCustomForm> {
     super.dispose();
   }
 
-  genderPerson _value = genderPerson.male;
+//  genderPerson _value= genderPerson.other;
+  // =  genderPerson.male;
 
   @override
   Widget build(BuildContext context) {
@@ -93,7 +96,7 @@ class _MyCustomFormSate extends State<MyCustomForm> {
       child: SingleChildScrollView(
         child: Form(
           key: _formKey,
-          autovalidateMode: AutovalidateMode.always,
+          autovalidateMode: AutovalidateMode.onUserInteraction,
           child: Column(
             children: [
               TextFormField(
@@ -111,8 +114,6 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                       color: Color(0xffA87B5D),
                     ),
                   ),
-
-                 
                 ),
                 validator: MultiValidator([
                   RequiredValidator(errorText: "Name required"),
@@ -153,7 +154,7 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                         label: Text('Email'),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(55),
-                          borderSide:const BorderSide(
+                          borderSide: const BorderSide(
                             color: Color(0xffA87B5D),
                           ),
                         ),
@@ -169,7 +170,7 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                         labelText: 'Phone Number',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(50),
-                          borderSide:const BorderSide(
+                          borderSide: const BorderSide(
                             color: Color(0xffA87B5D),
                           ),
                         ),
@@ -180,7 +181,7 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                       },
                     ),
               SizedBox(
-                height:  5,
+                height: 5,
               ),
               Row(
                 children: [
@@ -192,7 +193,7 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                               type = 'email';
                             });
                           },
-                          child:const Text(
+                          child: const Text(
                             "Use Email",
                             style: TextStyle(
                                 color: Colors.redAccent,
@@ -260,7 +261,7 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                   label: Text('Confirm Password'),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(55),
-                    borderSide:const BorderSide(
+                    borderSide: const BorderSide(
                       color: Color(0xffA87B5D),
                     ),
                   ),
@@ -275,61 +276,106 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                 ]),
               ),
               SizedBox(height: 20),
-              Text( 
+              Text(
                 "Gender",
-                style:  TextStyle(
+                style: TextStyle(
                     fontWeight: FontWeight.w900,
                     color: Color(0xffA87B5D),
                     fontSize: 30),
               ),
-              Container(
-                width: double.infinity,
-                height: 50.0,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  children: [
-                    Radio(
-                        value: _value,
-                        groupValue: genderPerson.male,
-                        onChanged: (genderPerson? value) {
-                          setState(() {
-                            _value = value!;
-                            print(genderPerson.male.name);
-                          });
-                        }),
-                    SizedBox(
-                      width: 10,
-                    ),
-                    Text("Male"),
-                    Radio(
-                        value: _value,
-                        groupValue: genderPerson.female,
-                        onChanged: (genderPerson? value) {
-                          setState(() {
-                            _value = value!;
-                            print(genderPerson.female.name);
-                          });
-                        }),
-                    SizedBox(
-                      width: 10,
-                    ),
-                    Text("Female"),
-                    Radio(
-                        value: _value,
-                        groupValue: genderPerson.other,
-                        onChanged: (genderPerson? value) {
-                          setState(() {
-                            _value = value!;
-                            print(genderPerson);
-                          });
-                        }),
-                    SizedBox(
-                      width: 10,
-                    ),
-                    Text("Custome"),
-                  ],
-                ),
+              Row(
+                children: [
+                  Radio(
+                      value: 1,
+                      groupValue: _value,
+                      onChanged: (Value) {
+                        setState(() {
+                          _value = Value! as int?;
+                        });
+                      }),
+                  SizedBox(width: 5),
+                  Text(
+                    "Male",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  Radio(
+                      value: 2,
+                      groupValue: _value,
+                      onChanged: (Value) {
+                        setState(() {
+                          _value = Value! as int?;
+                        });
+                      }),
+                  SizedBox(width: 5),
+                  Text(
+                    "Female",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  Radio(
+                      value: 3,
+                      groupValue: _value,
+                      onChanged: (Value) {
+                        setState(() {
+                          _value = Value! as int?;
+                        });
+                      }),
+                  SizedBox(width: 5),
+                  Text(
+                    "Others",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ],
               ),
+
+              // Container(
+              //   width: double.infinity,
+              //   height: 50.0,
+              //   child: ListView(
+              //     scrollDirection: Axis.horizontal,
+              //     children: [
+              //       Radio(
+              //           value: _value,
+              //           groupValue: genderPerson.male,
+              //           onChanged: (genderPerson? value) {
+              //             setState(() {
+              //               _value = value!;
+              //               print(genderPerson.male.name);
+              //             });
+              //           }),
+              //       SizedBox(
+              //         width: 10,
+              //       ),
+              //       Text("Male"),
+              //       Radio(
+              //           value: _value,
+              //           groupValue: genderPerson.female,
+              //           onChanged: (genderPerson? value)
+              //            {
+              //             setState(() {
+              //               _value = value!;
+              //               print(genderPerson.female.name);
+              //             });
+              //           }),
+              //       SizedBox(
+              //         width: 10,
+              //       ),
+              //       Text("Female"),
+              //       Radio(
+              //           value: _value,
+              //           groupValue: genderPerson.other,
+              //           onChanged: (genderPerson? value) {
+              //             setState(() {
+              //               _value = value!;
+              //               print(genderPerson);
+              //             });
+              //           }),
+              //       SizedBox(
+              //         width: 10,
+              //       ),
+              //       Text("Custome"),
+              //     ],
+              //   ),
+              // ),
               SizedBox(height: 30),
               SizedBox(
                 height: 40,
@@ -341,7 +387,7 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                   ),
                   child: _loading
                       ? CircularProgressIndicator()
-                      : Text( 
+                      : Text(
                           "Sign Up",
                           style: TextStyle(
                               fontWeight: FontWeight.bold,
@@ -359,6 +405,7 @@ class _MyCustomFormSate extends State<MyCustomForm> {
       ),
     );
   }
+
   void signUp(String email, String password) async {
     if (_formKey.currentState!.validate()) {
       setState(() {

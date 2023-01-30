@@ -25,7 +25,7 @@ class _ImagePickState extends State<ImagePick> {
   MediaType _mediaType = MediaType.image;
 
   String? imagePath;
-  final cuser =  FirebaseAuth.instance.currentUser;
+  // final cuser =  FirebaseAuth.instance.currentUser;
   // getUsername() async {
   //   final ref = FirebaseDatabase.instance.reference();
   //   User? cuser = await FirebaseAuth.instance.currentUser;
@@ -196,7 +196,7 @@ class _ImagePickState extends State<ImagePick> {
                         )),
                   ],
                 ),
-                 Text(cuser!.email.toString()),
+                //  Text(cuser!.email.toString()),
               ],
             )));
   }

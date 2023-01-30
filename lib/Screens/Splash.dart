@@ -1,21 +1,21 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:maps/Screens/Login.dart';
 import 'package:maps/Screens/homepage.dart';
-import 'package:maps/Screens/sadam.dart';
 import 'package:maps/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 String? emailStored;
 
-class Spalsh extends StatefulWidget {
-  const Spalsh({Key? key}) : super(key: key);
+class Splash extends StatefulWidget {
+  const Splash({Key? key}) : super(key: key);
   @override
-  State<Spalsh> createState() => _SpalshState();
+  State<Splash> createState() => _SplashState();
 }
 
-class _SpalshState extends State<Spalsh> {
+class _SplashState extends State<Splash> {
   @override
   void initState() {
     getValidation().whenComplete(
@@ -23,13 +23,19 @@ class _SpalshState extends State<Spalsh> {
         Timer( const
           Duration(seconds: 1),
           () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) =>
-                    emailStored == null ? Login() : homepage(),
-              ),
-            );
+            Get.off(()=> emailStored== null? Login() : homepage());
+          // Navigator.pushNamedAndRemoveUntil(
+          //                   (context),
+          //                   MaterialPageRoute(builder: (context) => emailStored== null? Login() : homepage()),
+          //                   (route) => false);
+            
+            // Navigator.push(
+            //   context,
+            //   MaterialPageRoute(
+            //     builder: (context) =>
+            //         emailStored == null ? Login() : homepage(),
+            //   ),
+            // );
           },
         );
       },
@@ -54,7 +60,6 @@ class _SpalshState extends State<Spalsh> {
         body: Center(
           child: Image.asset(
             "assets/images/welcome6.png", height: 355, width: 355,
-            // color: Colors.white,
             fit: BoxFit.cover,
           ),
         ),

@@ -11,7 +11,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:maps/Screens/ImagePicke.dart';
 import 'package:maps/Screens/Splash.dart';
 import 'package:maps/Screens/maps.dart';
+import 'package:maps/Screens/marker.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
+
 
 enum MediaType {
   image,
@@ -56,9 +58,9 @@ class _homepageState extends State<homepage> {
   }
   
   int _selectedIndex = 0;
-  static const List<Widget> _widgetOptions = <Widget>[
+  static  List<Widget> _widgetOptions = <Widget>[
     ImagePick(),
-    maps(),
+    marker(),
   ];
   void _onItemTapped(int index) {
     setState(() {
@@ -76,7 +78,6 @@ class _homepageState extends State<homepage> {
             // print(value.latitude.toString() +
             //     "     " +
             //     value.longitude.toString());
-
             List<Placemark> placemarks =
                 await placemarkFromCoordinates(value.latitude, value.longitude);
             setState(() {
@@ -92,7 +93,7 @@ class _homepageState extends State<homepage> {
                   print("address");
                   print(address);
                   ref.child(FirebaseAuth.instance.currentUser!.uid).update(
-                    {"location": address },
+                    {"location": address, "lat": LatitudeAddress, "long": longitudeAddress},
                   ).then((value) {
                     Fluttertoast.showToast(
                         msg: "Location Added Successfully",

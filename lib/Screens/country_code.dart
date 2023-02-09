@@ -1,6 +1,3 @@
-import 'package:country_code_picker/country_code_picker.dart';
-import 'package:flutter/gestures.dart';
-
 import 'package:flutter/material.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:maps/Screens/signup.dart';
@@ -19,14 +16,11 @@ class _Country_CodeState extends State<Country_Code> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          
           children: [
             IntlPhoneField(
-              
     decoration: InputDecoration(
         labelText: 'Phone Number',
         border: OutlineInputBorder(

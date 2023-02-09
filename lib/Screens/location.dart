@@ -1,10 +1,8 @@
 import 'dart:async';
-// import 'dart:html';
 
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:get/get.dart';
 import 'package:maps/Screens/homepage.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -53,7 +51,7 @@ void _onButtonPressed() {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             if (_currentAddress != null) Text(_currentAddress!),
-            FlatButton(
+            ElevatedButton(
                 child: Text("Get location"),
               onPressed: () async {
                 PermissionStatus locationstatus = await Permission.locationWhenInUse.request();
@@ -68,9 +66,9 @@ void _onButtonPressed() {
                 _getCurrentLocation();
               },
             ),
-            FlatButton(onPressed: (){
+            ElevatedButton(onPressed: (){
               Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (context) => homepage() ),
+                MaterialPageRoute(builder: (context) => const HomePage() ),
             );
             }, 
             child: Text("Go to Home Screen"),

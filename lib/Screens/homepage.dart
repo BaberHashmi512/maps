@@ -1,18 +1,12 @@
-import 'dart:io';
-import 'dart:ui';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_3d_choice_chip/flutter_3d_choice_chip.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:maps/Screens/ImagePicke.dart';
-import 'package:maps/Screens/Splash.dart';
-import 'package:maps/Screens/maps.dart';
 import 'package:maps/Screens/marker.dart';
-import 'package:video_thumbnail/video_thumbnail.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 
 enum MediaType {
@@ -20,45 +14,41 @@ enum MediaType {
   video;
 }
 
-void main() {
-  runApp(const MyApp());
-}
 
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
 
-  // This widget is the root of your application.
+//
+// void main() {
+//   runApp(const MyApp());
+// }
+// class MyApp extends StatelessWidget {
+//   const MyApp({Key? key}) : super(key: key);
+//   // This widget is the root of your application.
+//   @override
+//   Widget build(BuildContext context) {
+//     return MaterialApp(
+//       debugShowCheckedModeBanner: false,
+//       theme: ThemeData(
+//         primarySwatch: Colors.green,
+//       ),
+//       home: const HomePage(),
+//     );
+//   }
+class HomePage extends StatefulWidget {
+  const HomePage({Key? key}) : super(key: key);
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.green,
-      ),
-      home: const homepage(),
-    );
-  }
+  State<HomePage> createState() => _HomePageState();
 }
+class _HomePageState extends State<HomePage> {
 
-class homepage extends StatefulWidget {
-  const homepage({Key? key}) : super(key: key);
-
-  @override
-  State<homepage> createState() => _homepageState();
-}
-
-class _homepageState extends State<homepage> {
   final ref = FirebaseDatabase.instance.ref("User");
-  
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     getUserCurrentLocation();
   }
-  
   int _selectedIndex = 0;
-  static  List<Widget> _widgetOptions = <Widget>[
+  static const List<Widget> _widgetOptions = <Widget> [
     ImagePick(),
     marker(),
   ];
@@ -73,6 +63,7 @@ class _homepageState extends State<homepage> {
         .onError((error, stackTrace) {
       print("error==>>" + error.toString());
     });
+    requestLocationPermission();
      await Geolocator.getCurrentPosition().then((value) async {
             print("My Current Location");
             // print(value.latitude.toString() +
@@ -82,7 +73,6 @@ class _homepageState extends State<homepage> {
                 await placemarkFromCoordinates(value.latitude, value.longitude);
             setState(() {
               LatitudeAddress = value.latitude;
-
               longitudeAddress = value.longitude;
               // print("longitudeAddress+  " " + LatitudeAddress");
               address = placemarks.reversed.last.subLocality.toString()+
@@ -116,8 +106,6 @@ class _homepageState extends State<homepage> {
 });
             });
             }
-  
-
   String address = "";
   double? longitudeAddress;
   double? LatitudeAddress;
@@ -147,6 +135,29 @@ class _homepageState extends State<homepage> {
           backgroundColor: Color(0xffA87B5D),
         ),
         body: _widgetOptions.elementAt(_selectedIndex));
+  }
+  Future<void> requestLocationPermission()async{
+    final status = await Permission.location.status;
+    if (status != PermissionStatus.granted){
+      final result = await Permission.location.request();
+      if(result != PermissionStatus.granted){
+        showPermissionDeniedMessage();
+      }
+    }
+  }
+  void showPermissionDeniedMessage(){
+    showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text("Permission Required"),
+            content: Text("Acces to device Location is necessary for the app to function properly"),
+            actions: [
+              ElevatedButton(onPressed: ()=> Navigator.of(context).pop(), child: Text("ok")),
+            ],
+          );
+        }
+    );
   }
 }
 // Widget CustomButton({

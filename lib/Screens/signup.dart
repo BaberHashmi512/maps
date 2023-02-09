@@ -1,18 +1,14 @@
 // ignore_for_file: non_constant_identifier_names
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:country_code_picker/country_code_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:get/get.dart';
-import 'package:intl_phone_field/intl_phone_field.dart';
-import 'package:intl_phone_field/phone_number.dart';
-import 'package:maps/Screens/Login.dart';
 import 'package:form_field_validator/form_field_validator.dart';
+import 'package:intl_phone_field/intl_phone_field.dart';
+import 'package:maps/Screens/Login.dart';
 import 'package:maps/Screens/User_Model.dart';
-import 'package:maps/main.dart';
 
 void main() {
   runApp(MyApp());
@@ -121,14 +117,14 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                       errorText: "Name must be at least of 3 chars"),
                 ]),
               ),
-              SizedBox(height: 30),
+              const SizedBox(height: 30),
               TextFormField(
                 controller: lastname,
                 onSaved: (value) {
                   lastname.text = value!;
                 },
                 decoration: InputDecoration(
-                  prefixIcon: Icon(Icons.person),
+                  prefixIcon:  Icon(Icons.person),
                   hintText: 'Enter your name',
                   label: Text('Last Name'),
                   border: OutlineInputBorder(
@@ -276,7 +272,7 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                 ]),
               ),
               SizedBox(height: 20),
-              Text(
+              const  Text(
                 "Gender",
                 style: TextStyle(
                     fontWeight: FontWeight.w900,
@@ -294,7 +290,7 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                         });
                       }),
                   SizedBox(width: 5),
-                  Text(
+                 const Text(
                     "Male",
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
@@ -307,7 +303,7 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                         });
                       }),
                   SizedBox(width: 5),
-                  Text(
+                  const Text(
                     "Female",
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
@@ -320,62 +316,12 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                         });
                       }),
                   SizedBox(width: 5),
-                  Text(
+                 const Text(
                     "Others",
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
-
-              // Container(
-              //   width: double.infinity,
-              //   height: 50.0,
-              //   child: ListView(
-              //     scrollDirection: Axis.horizontal,
-              //     children: [
-              //       Radio(
-              //           value: _value,
-              //           groupValue: genderPerson.male,
-              //           onChanged: (genderPerson? value) {
-              //             setState(() {
-              //               _value = value!;
-              //               print(genderPerson.male.name);
-              //             });
-              //           }),
-              //       SizedBox(
-              //         width: 10,
-              //       ),
-              //       Text("Male"),
-              //       Radio(
-              //           value: _value,
-              //           groupValue: genderPerson.female,
-              //           onChanged: (genderPerson? value)
-              //            {
-              //             setState(() {
-              //               _value = value!;
-              //               print(genderPerson.female.name);
-              //             });
-              //           }),
-              //       SizedBox(
-              //         width: 10,
-              //       ),
-              //       Text("Female"),
-              //       Radio(
-              //           value: _value,
-              //           groupValue: genderPerson.other,
-              //           onChanged: (genderPerson? value) {
-              //             setState(() {
-              //               _value = value!;
-              //               print(genderPerson);
-              //             });
-              //           }),
-              //       SizedBox(
-              //         width: 10,
-              //       ),
-              //       Text("Custome"),
-              //     ],
-              //   ),
-              // ),
               SizedBox(height: 30),
               SizedBox(
                 height: 40,
@@ -387,7 +333,7 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                   ),
                   child: _loading
                       ? CircularProgressIndicator()
-                      : Text(
+                      : const Text(
                           "Sign Up",
                           style: TextStyle(
                               fontWeight: FontWeight.bold,
@@ -450,7 +396,6 @@ class _MyCustomFormSate extends State<MyCustomForm> {
       }
     }
   }
-
   postdetailsrealtimedatabase() async {
     print("callfunction");
     final referDatabasse = FirebaseDatabase.instance.ref("User");
@@ -488,7 +433,6 @@ class _MyCustomFormSate extends State<MyCustomForm> {
       );
     });
   }
-
   postDetailsToFirestore() async {
     // calling our firestore
     // calling our user model

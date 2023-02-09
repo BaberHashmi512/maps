@@ -1,10 +1,9 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:maps/Screens/Login.dart';
 import 'package:maps/Screens/homepage.dart';
-import 'package:maps/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 String? emailStored;
@@ -14,21 +13,20 @@ class Splash extends StatefulWidget {
   @override
   State<Splash> createState() => _SplashState();
 }
-
 class _SplashState extends State<Splash> {
   @override
   void initState() {
     getValidation().whenComplete(
       () {
         Timer( const
-          Duration(seconds: 1),
+          Duration(milliseconds: 55),
           () {
-            Get.off(()=> emailStored== null? Login() : homepage());
+            Get.off(()=> emailStored== null? Login() : const HomePage());
           // Navigator.pushNamedAndRemoveUntil(
           //                   (context),
           //                   MaterialPageRoute(builder: (context) => emailStored== null? Login() : homepage()),
           //                   (route) => false);
-            
+
             // Navigator.push(
             //   context,
             //   MaterialPageRoute(
@@ -42,16 +40,15 @@ class _SplashState extends State<Splash> {
     );
     super.initState();
   }
-
   Future getValidation() async {
     final SharedPreferences sharedPreferences =
         await SharedPreferences.getInstance();
+    sharedPreferences.clear();
     var getemail = sharedPreferences.getString('email');
     setState(() {
       emailStored = getemail;
     });
   }
-
   @override
   Widget build(BuildContext context) {
     return SafeArea(

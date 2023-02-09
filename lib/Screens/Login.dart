@@ -1,40 +1,32 @@
-import 'package:country_code_picker/country_code_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:form_field_validator/form_field_validator.dart';
 import 'package:get/get.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
-import 'package:maps/Screens/Login.dart';
-import 'package:form_field_validator/form_field_validator.dart';
-import 'package:maps/Screens/home.dart';
 import 'package:maps/Screens/homepage.dart';
-import 'package:maps/Screens/location.dart';
 import 'package:maps/Screens/signup.dart';
-import 'package:maps/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
-  runApp(MyApp());
-}
-// const List<String> list = <String>[
-//   'Male',
-//   'Female',
-//   'Custome',
-// ];
-
+// void main() {
+//   runApp(MyApp());
+// }
+// // const List<String> list = <String>[
+// //   'Male',
+// //   'Female',
+// //   'Custome',
+// // ];
+//
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp();
   }
 }
-
 class Login extends StatefulWidget {
   @override
   State<Login> createState() => _LoginState();
 }
-
 class _LoginState extends State<Login> {
 //  int? _value = 1;
   @override
@@ -55,14 +47,12 @@ class _LoginState extends State<Login> {
     );
   }
 }
-
 class MyCustomForm extends StatefulWidget {
   const MyCustomForm({Key? key}) : super(key: key);
 
   @override
   State<MyCustomForm> createState() => _MyCustomFormSate();
 }
-
 class _MyCustomFormSate extends State<MyCustomForm> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   bool isVisible = true;
@@ -82,13 +72,11 @@ class _MyCustomFormSate extends State<MyCustomForm> {
     password.dispose();
     super.dispose();
   }
-
   Future<void> login(String email, String password) async {
     if (_formKey.currentState!.validate()) {
       setState(() {
         _loading = true;
       });
-
       try {
         final result = await _auth.signInWithEmailAndPassword(
             email: email, password: password);
@@ -101,7 +89,7 @@ class _MyCustomFormSate extends State<MyCustomForm> {
         //     MaterialPageRoute(builder: (context) => homepage()),
         //     (route) => false);
         Get.to(
-          () => homepage(),
+          () => const HomePage(),
           transition: Transition.circularReveal,
           duration: Duration(
             milliseconds: 500,
@@ -115,7 +103,6 @@ class _MyCustomFormSate extends State<MyCustomForm> {
       }
     }
   }
-
   @override
   Widget build(BuildContext context) {
     return Padding(

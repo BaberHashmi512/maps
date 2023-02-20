@@ -1,9 +1,8 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:maps/Screens/Login.dart';
-import 'package:maps/Screens/homepage.dart';
+import 'package:maps/Screens/marker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 String? emailStored;
@@ -21,7 +20,7 @@ class _SplashState extends State<Splash> {
         Timer( const
           Duration(milliseconds: 55),
           () {
-            Get.off(()=> emailStored== null? Login() : const HomePage());
+            Get.off(()=> emailStored== null? Login() : const marker());
           // Navigator.pushNamedAndRemoveUntil(
           //                   (context),
           //                   MaterialPageRoute(builder: (context) => emailStored== null? Login() : homepage()),
@@ -43,7 +42,6 @@ class _SplashState extends State<Splash> {
   Future getValidation() async {
     final SharedPreferences sharedPreferences =
         await SharedPreferences.getInstance();
-    sharedPreferences.clear();
     var getemail = sharedPreferences.getString('email');
     setState(() {
       emailStored = getemail;

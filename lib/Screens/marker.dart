@@ -1,312 +1,16 @@
-// import 'dart:async';
-// import 'package:firebase_database/firebase_database.dart';
-// import 'package:flutter/material.dart';
-// import 'package:geolocator/geolocator.dart';
-// import 'package:google_maps_flutter/google_maps_flutter.dart';
-//
-// class marker extends StatefulWidget {
-// const marker({Key? key}) : super(key: key);
-//
-// @override
-// _markerState createState() => _markerState();
-// }
-// class _markerState extends State<marker> {
-// 	final dbRef = FirebaseDatabase.instance.ref("User");
-// 	Completer<GoogleMapController> _controller = Completer();
-// 	static final CameraPosition _kGoogle = const CameraPosition(
-// 		target: LatLng(20.42796133580664, 80.885749655962),
-// 		zoom: 14.4746,
-// 	);
-// 	final List<Marker> _markers = <Marker>[
-// 		Marker(
-// 				markerId: MarkerId('1'),
-// 				position: LatLng(20.42796133580664, 75.885749655962),
-// 				infoWindow: InfoWindow(
-// 					title: 'My Position',
-// 				)
-// 		),
-// 		Marker(
-// 				markerId: MarkerId('5'),
-// 				position: LatLng(20.42796133580656, 75.885749655956),
-// 				infoWindow: InfoWindow(
-// 					title: 'My Position 5',
-// 				)
-// 		),
-// 	];
-//
-// 	Future<Position> getUserCurrentLocation() async {
-// 		await Geolocator.requestPermission().then((value) {}).onError((error,
-// 				stackTrace) async {
-// 			await Geolocator.requestPermission();
-// 			print("ERROR" + error.toString());
-// 		});
-// 		return await Geolocator.getCurrentPosition();
-// 	}
-//
-// 	@override
-// 	Widget build(BuildContext context) {
-// 		return Scaffold(
-// 				body: Container(
-// 					child: SafeArea(
-// 						child: GoogleMap(
-// 							initialCameraPosition: _kGoogle,
-// 							markers: Set<Marker>.of(_markers),
-// 							mapType: MapType.normal,
-// 							myLocationEnabled: true,
-// 							compassEnabled: true,
-// 							onMapCreated: (GoogleMapController controller) {
-// 								_controller.complete(controller);
-// 							},
-// 						),
-// 					),
-// 				),
-// 				floatingActionButton: FloatingActionButton(
-// 					onPressed: () async {
-// 						getUserCurrentLocation().then((value) async {
-// 							print(
-// 									value.latitude.toString() + " " + value.longitude.toString());
-// 							_markers.add(
-// 								Marker(
-// 									markerId: MarkerId("2"),
-// 									position: LatLng(value.latitude, value.longitude),
-// 									infoWindow: InfoWindow(
-// 										title: 'Baber Ali',
-// 									),
-// 								),
-// 							);
-// 							_markers.add(
-// 								Marker(
-// 									markerId: MarkerId("5"),
-// 									position: LatLng(24.9004032, 67.190784),
-// 									infoWindow: InfoWindow(
-// 										title: 'Qalandar',
-// 									),
-// 								),
-// 							);
-// 							CameraPosition cameraPosition = new CameraPosition(
-// 								target: LatLng(value.latitude, value.longitude),
-// 								zoom: 14,
-// 							);
-// 							final GoogleMapController controller = await _controller.future;
-// 							controller.animateCamera(
-// 									CameraUpdate.newCameraPosition(cameraPosition));
-// 							setState(() {});
-// 						});
-// 					},
-// 					child: Icon(Icons.local_activity),
-// 				)
-// 		);
-// 	}
-// }
+import 'dart:async';
 
-
-// ........................
-
-// import 'dart:async';
-//
-// import 'package:firebase_auth/firebase_auth.dart';
-// import 'package:firebase_database/firebase_database.dart';
-// import 'package:firebase_database/ui/firebase_animated_list.dart';
-// import 'package:flutter/material.dart';
-// import 'package:google_maps_flutter/google_maps_flutter.dart';
-// class marker extends StatefulWidget {
-//   const marker({Key? key}) : super(key: key);
-//
-//   @override
-//   State<marker> createState() => _markerState();
-// }
-
-// class _markerState extends State<marker> {
-// 	final aut = FirebaseAuth.instance;
-// 	final ref= FirebaseDatabase.instance.ref("User");
-//   final Completer<GoogleMapController> _controller= Completer();
-//   static const CameraPosition _kGooglePlex= CameraPosition(target: LatLng(33.6844, 73.479),
-//   zoom: 14, );
-//   final List<Marker> _markers= const <Marker>[
-//     Marker(markerId: MarkerId('1'),
-//     position: LatLng(33.6844, 73.479),
-//       infoWindow: InfoWindow(title: "Baber Ali Hashmi")
-//     ),
-//   ];
-//   var latitude;
-//   var longitude;
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       body: Column(
-//         children: [
-//           Expanded(
-//               child: FirebaseAnimatedList(
-//                   query: ref,
-//                   defaultChild: Text('Loading'),
-//                   itemBuilder: (Context, snapshot, animation, indexs){
-//                     latitude = snapshot.child('lat').value;
-//                     longitude= snapshot.child('long').value;
-//                     return GoogleMap(
-//                       onCameraMove: (CameraPosition position){
-//                         latitude= position.target.latitude.toString();
-//                         longitude= position.target.longitude.toString();
-//                       },
-//                         initialCameraPosition: _kGooglePlex,
-//                       markers: Set<Marker>.of(_markers),
-//                       onMapCreated: (GoogleMapController controller){
-//                         _controller.complete(controller);
-//                       },
-//
-//                     );
-//
-//
-//                   }
-//               ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }
-
-/*import 'package:firebase_database/firebase_database.dart';
-import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-class marker extends StatefulWidget {
-  const marker({Key? key}) : super(key: key);
-
-  @override
-  State<marker> createState() => _markerState();
-}
-
-class _markerState extends State<marker> {
-  GoogleMapController? mycontroller;
-  Map<MarkerId, Marker> markers = <MarkerId , Marker>{};
-
-  void initMarker(specify, specifyId)async{
-    var markerIdval= specifyId;
-    final MarkerId markerId= MarkerId(markerIdval);
-    final Marker marker= Marker(
-        markerId: markerId,
-      position: LatLng(specify['location'].latitude, specify['location'].longitude),
-      infoWindow: InfoWindow(title: 'Users', snippet: specify['address'])
-    );
-    setState(() {
-      markers[markerId]= marker;
-    });
-  }
-
-  getMarkerData()async{
-    FirebaseDatabase.instance.ref().child('User').once().then((myMockData)
-    {
-      if(myMockData.documents.isNotEmpty){
-        for(int i=0; i<myMockData.documents.length; i++){
-       initMarker(myMockData.documents[i].data, myMockData.documents[i].documentID);
-        }
-      }
-    });
-  }
-  void initstate(){
-    getMarkerData();
-    super.initState();
-  }
-  @override
-  Widget build(BuildContext context) {
-    Set<Marker> getMarker(){
-      return <Marker>[
-         Marker(
-            markerId: MarkerId('Code Base'),
-          position: LatLng(33.6844, 73.479),
-          icon: BitmapDescriptor.defaultMarker,
-          infoWindow: InfoWindow(title: 'Office')
-        )
-      ].toSet();
-    }
-    return Scaffold(
-      body: GoogleMap(
-        markers: Set<Marker>.of(markers.values),
-          mapType: MapType.normal,
-          initialCameraPosition:CameraPosition(
-              target:LatLng(33.6844, 73.479),
-            zoom: 14.0,),
-        onMapCreated: (GoogleMapController controller){
-            mycontroller= controller;
-        },
-      ),
-    );
-  }
-}/
-
-// ..... tutorial code Ended
-
-//
-// import 'package:flutter/material.dart';
-// import 'package:google_maps_flutter/google_maps_flutter.dart';
-// import 'package:firebase_database/firebase_database.dart';
-//
-// class MyMap extends StatefulWidget {
-//   @override
-//   _MyMapState createState() => _MyMapState();
-// }
-//
-// class _MyMapState extends State<MyMap> {
-//   GoogleMapController? mapController;
-//   final Set<Marker> markers = Set();
-//   final FirebaseDatabase database = FirebaseDatabase.instance;
-//   DatabaseReference?  databaseReference;
-//   @override
-//   void initState() {
-//     super.initState();
-//     databaseReference = database.ref().child("User");
-//     databaseReference?.onChildAdded.listen(_onEntryAdded);
-//     databaseReference?.onChildChanged.listen(_onEntryChanged);
-//   }
-//
-//   _onEntryAdded( event) {
-//     setState(() {
-//       markers.add(Marker(
-//         markerId: MarkerId(event.snapshot.key),
-//         position: LatLng(
-//             event.snapshot.value["latitude"], event.snapshot.value["longitude"]),
-//         infoWindow: InfoWindow(title: event.snapshot.value["title"]),
-//       ));
-//     });
-//   }
-//
-//   _onEntryChanged(event) {
-//     var markerId = markers.singleWhere((marker) => marker.markerId.value == event.snapshot.key,
-//         orElse: () => null);
-//     if (markerId != null) {
-//       setState(() {
-//         markers.remove(markerId);
-//         markers.add(Marker(
-//           markerId: markerId.markerId,
-//           position: LatLng(
-//               event.snapshot.value["latitude"], event.snapshot.value["longitude"]),
-//           infoWindow: InfoWindow(title: event.snapshot.value["title"]),
-//         ));
-//       });
-//     }
-//   }
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       body: GoogleMap(
-//         onMapCreated: (controller) {
-//           setState(() {
-//             mapController = controller;
-//           });
-//         },
-//         initialCameraPosition: CameraPosition(
-//           target: LatLng(37.42796133580664, -122.085749655962),
-//           zoom: 14.4746,
-//         ),
-//         markers: markers,
-//       ),
-//     );
-//   }
-// }
- */
-import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:image/image.dart' as IMG;
+
 class marker extends StatefulWidget {
   const marker({Key? key}) : super(key: key);
 
@@ -315,28 +19,102 @@ class marker extends StatefulWidget {
 }
 
 class _markerState extends State<marker> {
-  final FirebaseDatabase database= FirebaseDatabase.instance;
-  List<Marker> markers= [];
 
+  getUserCurrentLocation() async {
+    await Geolocator.requestPermission()
+        .then((value) {})
+        .onError((error, stackTrace) {
+      print("error==>>$error");
+    });
+    requestLocationPermission();
+    await Geolocator.getCurrentPosition().then((value) async {
+      print("My Current Location");
+      // print(value.latitude.toString() +
+      //     "     " +
+      //     value.longitude.toString());
+      List<Placemark> placemarks =
+          await placemarkFromCoordinates(value.latitude, value.longitude);
+      setState(() {
+        LatitudeAddress = value.latitude;
+        longitudeAddress = value.longitude;
+        // print("longitudeAddress+  " " + LatitudeAddress");
+        address =
+            "${placemarks.reversed.last.subLocality} ${placemarks.reversed.last.locality} ${placemarks.reversed.last.country}";
+        print("address");
+        print(address);
+        ref.child(FirebaseAuth.instance.currentUser!.uid).update(
+          {
+            "location": address,
+            "lat": LatitudeAddress,
+            "long": longitudeAddress
+          },
+        ).then((value) {
+          Fluttertoast.showToast(
+              msg: "Location Added Successfully",
+              toastLength: Toast.LENGTH_SHORT,
+              gravity: ToastGravity.CENTER,
+              timeInSecForIosWeb: 1,
+              backgroundColor: Color(0xffA87B5D),
+              textColor: Colors.white,
+              fontSize: 16.0);
+        }).onError((error, stackTrace) {
+          Fluttertoast.showToast(
+              msg: "Something went wrong try again",
+              toastLength: Toast.LENGTH_SHORT,
+              gravity: ToastGravity.CENTER,
+              timeInSecForIosWeb: 1,
+              backgroundColor: Colors.red,
+              textColor: Colors.white,
+              fontSize: 16.0);
+        });
+      });
+    });
+  }
+
+  String address = "";
+  double? longitudeAddress;
+  double? LatitudeAddress;
+
+  Future<bool> _onWillPop() async {
+    SystemNavigator.pop();
+    return false;
+  }
+
+  // Completer<GoogleMapController> _controller= Completer();
+  late GoogleMapController googleMapController;
+  final FirebaseDatabase database = FirebaseDatabase.instance;
+  final ref = FirebaseDatabase.instance.ref("User");
+
+  List<Marker> markers = [];
   var latitude;
 
+  resizeImage(Uint8List data) {
+    Uint8List resizedData = data;
+    IMG.Image img = IMG.decodeImage(data)!;
+    IMG.Image resized = IMG.copyResize(img, width: 80, height: 80);
+    resizedData = IMG.encodeJpg(resized) as Uint8List;
+    return resizedData;
+  }
 
-  @override
-  void initState(){
-    super.initState();
+  Hello(){
     database.ref().child('User').onValue.listen((event) {
       setState(() {
         // markers.clear();
-        Map<dynamic,dynamic> markerData = event.snapshot.value as Map<dynamic,dynamic>;
+        Map<dynamic, dynamic> markerData =
+        event.snapshot.value as Map<dynamic, dynamic>;
         latitude = event.snapshot.value;
-        markerData.forEach((key, value) {
+        markerData.forEach((key, value) async {
+          Uint8List bytes = (await NetworkAssetBundle(Uri.parse(value["picture"])).load(value["picture"]))
+              .buffer
+              .asUint8List();
+          bytes = resizeImage(bytes);
           markers.add(
             Marker(
-                markerId: MarkerId(key),
+              icon: BitmapDescriptor.fromBytes(bytes),
+              markerId: MarkerId(key),
               position: LatLng(value["lat"], value["long"]),
               infoWindow: InfoWindow(
                 title: value["firsname"],
-                snippet: value["email"]
               ),
             ),
           );
@@ -345,20 +123,124 @@ class _markerState extends State<marker> {
     });
   }
 
+  @override
+  void initState() {
+    super.initState();
+    getUserCurrentLocation();
+    Hello();
+
+  }
 
 
 
   @override
   Widget build(BuildContext context) {
-    print("Hello $latitude");
-    return Scaffold(
-      body: GoogleMap(
-        initialCameraPosition: CameraPosition(
-          target: LatLng(30.157457, 71.524918),
-          zoom: 14.0,
+    return RefreshIndicator(
+      displacement: 250,
+      backgroundColor: Colors.yellow,
+      color: Colors.red,
+      strokeWidth: 3,
+      triggerMode: RefreshIndicatorTriggerMode.onEdge,
+      onRefresh: () async {
+        await Hello();
+      },
+      child: WillPopScope(
+        onWillPop: _onWillPop,
+        child: SafeArea(
+          child: Scaffold(
+            body: GoogleMap(
+              onMapCreated: (GoogleMapController controller) {
+                googleMapController = controller;
+              },
+              initialCameraPosition: const CameraPosition(
+                target: LatLng(30.157457, 71.524918),
+                zoom: 14.4746,
+              ),
+              myLocationButtonEnabled: true,
+              markers: Set<Marker>.of(markers),
+            ),
+            floatingActionButton: FloatingActionButton.extended(
+              onPressed: () async {
+                try {
+                  Position position = await _determinePosition();
+                  googleMapController
+                      .animateCamera(CameraUpdate.newCameraPosition(
+                    CameraPosition(
+                      target: LatLng(position.latitude, position.longitude),
+                      zoom: 14.0,
+                    ),
+                  ));
+                  Hello();
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(e.toString()),
+                  ));
+                }
+              },
+              //   Position position = await _determinePosition();
+              //   googleMapController.animateCamera(CameraUpdate.newCameraPosition(
+              //       CameraPosition(
+              //           target:LatLng(position.latitude, position.longitude),
+              //         zoom: 14.0,
+              //       ),
+              //   ));
+              // },
+              label: const Text("Current Location"),
+              icon: const Icon(Icons.location_history),
+              backgroundColor: const Color(0xffA87B5D),
+            ),
+          ),
         ),
-        markers: Set<Marker>.of(markers),
       ),
     );
+  }
+
+  Future<Position> _determinePosition() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      return Future.error('Location services are disabled');
+    }
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return Future.error("Location Permission Denied");
+      }
+    }
+    if (permission == LocationPermission.deniedForever) {
+      return Future.error(
+          'Location Permission are permanently Denied Please go to the Setting and turn on the Location');
+    }
+    Position position = await Geolocator.getCurrentPosition();
+    return position;
+  }
+
+  Future<void> requestLocationPermission() async {
+    final status = await Permission.location.status;
+    if (status != PermissionStatus.granted) {
+      final result = await Permission.location.request();
+      if (result != PermissionStatus.granted) {
+        showPermissionDeniedMessage();
+      }
+    }
+  }
+
+  void showPermissionDeniedMessage() {
+    showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text("Permission Required"),
+            content: const Text(
+                "Access to device Location is necessary for the app to function properly"),
+            actions: [
+              ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text("ok")),
+            ],
+          );
+        });
   }
 }

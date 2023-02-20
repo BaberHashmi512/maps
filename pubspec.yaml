@@ -35,13 +35,13 @@ dependencies:
   cupertino_icons: ^1.0.2
   form_field_validator: ^1.1.0
   country_codes: ^2.2.0
-  image_picker: ^0.8.6
+  image_picker: ^0.8.6+1
   path_provider: ^2.0.11
   flutter_3d_choice_chip: ^0.1.4
   video_thumbnail: ^0.5.3
   firebase_auth: ^4.2.5
   firebase_core: ^2.4.1
-  firebase_storage: ^11.0.10
+  firebase_storage: ^11.0.11
   cloud_firestore: ^4.3.1
   fluttertoast: ^8.1.2
   permission_handler: ^10.2.0
@@ -53,9 +53,11 @@ dependencies:
   intl_phone_field: ^3.1.0
   shared_preferences: ^2.0.16
   flutter_query: ^0.1.19
-
+  location: ^4.4.0
   dependencies:
   flutter_launcher_icons: ^0.11.0
+  flutter_form_builder: ^7.7.0
+  image: ^3.0.2
   # geocoding: any
   # # geolocator: ^6.2.1
   # location: ^4.2.0

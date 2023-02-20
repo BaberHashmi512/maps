@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
@@ -13,33 +14,16 @@ enum MediaType {
   image,
   video;
 }
-
-
-
-//
-// void main() {
-//   runApp(const MyApp());
-// }
-// class MyApp extends StatelessWidget {
-//   const MyApp({Key? key}) : super(key: key);
-//   // This widget is the root of your application.
-//   @override
-//   Widget build(BuildContext context) {
-//     return MaterialApp(
-//       debugShowCheckedModeBanner: false,
-//       theme: ThemeData(
-//         primarySwatch: Colors.green,
-//       ),
-//       home: const HomePage(),
-//     );
-//   }
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
   @override
   State<HomePage> createState() => _HomePageState();
 }
 class _HomePageState extends State<HomePage> {
-
+  Future<bool> _onWillPop() async{
+    SystemNavigator.pop();
+    return false;
+  }
   final ref = FirebaseDatabase.instance.ref("User");
   @override
   void initState() {
@@ -48,10 +32,10 @@ class _HomePageState extends State<HomePage> {
     getUserCurrentLocation();
   }
   int _selectedIndex = 0;
-  static const List<Widget> _widgetOptions = <Widget> [
-    ImagePick(),
-    marker(),
-  ];
+  // static const List<Widget> _widgetOptions = <Widget> [
+  //   ImagePick(),
+  //   marker(),
+  // ];
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -111,30 +95,37 @@ class _HomePageState extends State<HomePage> {
   double? LatitudeAddress;
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        bottomNavigationBar: BottomNavigationBar(
-            type: BottomNavigationBarType.fixed,
-            backgroundColor: Color(0xffA87B5D),
-            showSelectedLabels: true,
-            selectedItemColor: Colors.white,
-            iconSize: 30,
-            onTap: _onItemTapped,
-            currentIndex: _selectedIndex,
-            items: [
-              BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-              BottomNavigationBarItem(
-                  icon: Icon(Icons.location_on_outlined), label: "MAPS"),
-            ]),
-        appBar: AppBar(
-          centerTitle: true,
-          title: const Text(
-            "User Profile And Portfolio",
-            style: TextStyle(
-                fontWeight: FontWeight.bold, fontSize: 22, color: Colors.white),
-          ),
-          backgroundColor: Color(0xffA87B5D),
-        ),
-        body: _widgetOptions.elementAt(_selectedIndex));
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Scaffold(
+
+          // bottomNavigationBar: BottomNavigationBar(
+          //     type: BottomNavigationBarType.fixed,
+          //     backgroundColor: Color(0xffA87B5D),
+          //     showSelectedLabels: true,
+          //     selectedItemColor: Colors.white,
+          //     iconSize: 30,
+          //     onTap: _onItemTapped,
+          //     currentIndex: _selectedIndex,
+          //     items: [
+          //       BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
+          //       BottomNavigationBarItem(
+          //           icon: Icon(Icons.location_on_outlined), label: "MAPS"),
+          //     ]),
+          // appBar: AppBar(
+          //   automaticallyImplyLeading: false,
+          //   elevation: 0,
+          //   centerTitle: true,
+          //   title: const Text(
+          //     "User Profile And Portfolio",
+          //     style: TextStyle(
+          //         fontWeight: FontWeight.bold, fontSize: 22, color: Colors.white),
+          //   ),
+          //   backgroundColor: Color(0xffA87B5D),
+          // ),
+          // body: _widgetOptions.elementAt(_selectedIndex)
+      ),
+    );
   }
   Future<void> requestLocationPermission()async{
     final status = await Permission.location.status;

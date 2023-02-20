@@ -5,6 +5,7 @@ import 'package:form_field_validator/form_field_validator.dart';
 import 'package:get/get.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:maps/Screens/homepage.dart';
+import 'package:maps/Screens/marker.dart';
 import 'package:maps/Screens/signup.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -55,7 +56,7 @@ class MyCustomForm extends StatefulWidget {
 }
 class _MyCustomFormSate extends State<MyCustomForm> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  bool isVisible = true;
+  bool isVisible = false;
   String type = 'email';
   final _formKey = GlobalKey<FormState>();
   String _errorMessage = "";
@@ -89,7 +90,7 @@ class _MyCustomFormSate extends State<MyCustomForm> {
         //     MaterialPageRoute(builder: (context) => homepage()),
         //     (route) => false);
         Get.to(
-          () => const HomePage(),
+          () => marker(),
           transition: Transition.circularReveal,
           duration: Duration(
             milliseconds: 500,
@@ -110,7 +111,7 @@ class _MyCustomFormSate extends State<MyCustomForm> {
       child: SingleChildScrollView(
         child: Form(
           key: _formKey,
-          autovalidateMode: AutovalidateMode.onUserInteraction,
+          // autovalidateMode: AutovalidateMode.onUserInteraction,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -205,12 +206,21 @@ class _MyCustomFormSate extends State<MyCustomForm> {
               ),
               TextFormField(
                 controller: password,
-                obscureText: true,
+                obscureText: !isVisible,
                 decoration: InputDecoration(
-                  prefixIcon: Icon(Icons.vpn_key),
+                  suffixIcon: IconButton(onPressed: (){
+                    setState(() {
+                      isVisible = !isVisible;
+                    });
+                  },
+                      icon: isVisible ? Icon(Icons.visibility, color: Colors.black,) :
+                      Icon(Icons.visibility_off, color: Colors.grey,),
+                    ),
+                  prefixIcon: Icon(Icons.lock_outline),
                   hintText: 'Enter password',
                   label: Text('Password'),
                   border: OutlineInputBorder(
+
                     borderRadius: BorderRadius.circular(55),
                     borderSide: const BorderSide(
                       color: Color(0xffA87B5D),
@@ -249,46 +259,6 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                       final SharedPreferences sharedPreferences =
                           await SharedPreferences.getInstance();
                       sharedPreferences.setString('email', email.text);
-                      //        var user = await _authenticateUser (email.text, password.text);
-                      //        if (user == null ){
-                      //         setState(() {
-                      //             _errorMessage = "Account does not exist";
-                      //         });
-                      //        } else if (!user.validatePassword(password.text))
-
-                      //         {
-                      //         setState(() {
-                      //             _errorMessage = "Password is wrong";
-                      //         });
-                      //     }else {
-                      //         // Perform login
-                      //         setState(() {
-                      //             _errorMessage !=null;
-                      //         });
-                      //     }_errorMessage != null
-                      // ? Text(_errorMessage, style: TextStyle(color: Colors.red, fontSize: 14),)
-                      // : Container();
-                      //       final SharedPreferences sharedPreferences =
-                      //             await SharedPreferences.getInstance();
-                      //         sharedPreferences.setString(
-                      //             'email', email.text);
-                      //       setState(() {
-                      //         _loading = true;
-                      //       });
-                      //       _auth
-                      //           .signInWithEmailAndPassword(
-                      //               email: email.text.toString(),
-                      //               password: password.text.toString())
-                      //           .then((value) {
-                      //         setState(() {
-                      //           _loading = false;
-                      //         });
-
-                      // }).onError((error, stackTrace) {
-                      //   setState(() {
-                      //     _loading = false;
-                      //   });
-                      // });
                     }),
               ),
               FittedBox(

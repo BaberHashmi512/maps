@@ -1,33 +1,31 @@
+import 'dart:async';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:form_field_validator/form_field_validator.dart';
 import 'package:get/get.dart';
+import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:maps/Screens/homepage.dart';
 import 'package:maps/Screens/marker.dart';
 import 'package:maps/Screens/signup.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
-// void main() {
-//   runApp(MyApp());
-// }
-// // const List<String> list = <String>[
-// //   'Male',
-// //   'Female',
-// //   'Custome',
-// // ];
-//
+
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp();
   }
 }
+
 class Login extends StatefulWidget {
   @override
   State<Login> createState() => _LoginState();
 }
+
 class _LoginState extends State<Login> {
 //  int? _value = 1;
   @override
@@ -35,7 +33,8 @@ class _LoginState extends State<Login> {
     return Scaffold(
       // backgroundColor: Colors.black38,
       appBar: AppBar(
-        backgroundColor: Color(0xffA87B5D),
+        automaticallyImplyLeading: false,
+        backgroundColor: const Color(0xffA87B5D),
         elevation: 0,
         title: const Text(
           "Login Page",
@@ -48,32 +47,66 @@ class _LoginState extends State<Login> {
     );
   }
 }
+
 class MyCustomForm extends StatefulWidget {
   const MyCustomForm({Key? key}) : super(key: key);
 
   @override
   State<MyCustomForm> createState() => _MyCustomFormSate();
 }
+
 class _MyCustomFormSate extends State<MyCustomForm> {
+
+  late StreamSubscription subscription;
+  var isDeviceConnected = false;
+  bool isAlertSet = false;
+  bool isInternetWorking = true;
+  @override
+  void initState() {
+    getConnectivity();
+    super.initState();
+  }
+  getConnectivity() {
+    subscription = Connectivity().onConnectivityChanged.listen((ConnectivityResult result) async {
+      isDeviceConnected = await InternetConnectionChecker().hasConnection;
+      if (isDeviceConnected && isInternetWorking == false && isAlertSet == false) {
+        isInternetWorking = await checkInternetWorking();
+        if (isInternetWorking == false) {
+          showDialogBox();
+          setState(() => isAlertSet = true);
+        }
+      } else if (!isDeviceConnected && isAlertSet == false) {
+        showDialogBox();
+        setState(() => isAlertSet = true);
+      }
+    });
+  }
+
   final FirebaseAuth _auth = FirebaseAuth.instance;
   bool isVisible = false;
   String type = 'email';
   final _formKey = GlobalKey<FormState>();
   String _errorMessage = "";
+  var message;
 
   Future _authenticateUser(String email, String password) async {}
+
   // final _auth = FirebaseAuth.instance;
   bool _loading = false;
   final email = TextEditingController();
   final password = TextEditingController();
+  final number = TextEditingController();
   bool isEmail = false;
+
   @override
   void dispose() {
     email.dispose();
     password.dispose();
+    subscription.cancel();
     super.dispose();
   }
-  Future<void> login(String email, String password) async {
+
+  login(String email, String password) async {
     if (_formKey.currentState!.validate()) {
       setState(() {
         _loading = true;
@@ -89,21 +122,35 @@ class _MyCustomFormSate extends State<MyCustomForm> {
         //     (context),
         //     MaterialPageRoute(builder: (context) => homepage()),
         //     (route) => false);
-        Get.to(
-          () => marker(),
-          transition: Transition.circularReveal,
-          duration: Duration(
-            milliseconds: 500,
-          ),
-        );
-      } catch (error) {
+        if(user != null) {
+          Navigator.push(
+              context, MaterialPageRoute(builder: (ctx) => HomeScreen()));
+        }
+      }
+      on FirebaseAuthException catch (error) {
+        message = 'An error has occurred.'; // default message
+        // debugPrint(error.code);
+        switch (error.code) {
+          case 'user-not-found':
+            message =
+                'There is no user account with the email address provided.';
+            break;
+          case 'wrong-password':
+            message = 'Invalid password. Please enter correct password.';
+            break;
+        }
         setState(() {
           _loading = false;
         });
-        Fluttertoast.showToast(msg: error.toString());
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+
+        // Fluttertoast.showToast(msg: error.toString());
       }
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -119,22 +166,24 @@ class _MyCustomFormSate extends State<MyCustomForm> {
               Container(
                   width: 200,
                   height: 200,
-                  decoration: new BoxDecoration(
+                  decoration:  const BoxDecoration(
                       shape: BoxShape.circle,
-                      image: new DecorationImage(
+                      image:  DecorationImage(
                         fit: BoxFit.cover,
                         image: AssetImage("assets/images/login5.png"),
                       ))),
-              SizedBox(
+              const SizedBox(
                 height: 50,
               ),
               type == 'email'
                   ? TextFormField(
+                autofillHints:const [AutofillHints.email],
+                keyboardType: TextInputType.emailAddress,
                       controller: email,
                       decoration: InputDecoration(
-                        prefixIcon: Icon(Icons.email),
+                        prefixIcon: const Icon(Icons.email),
                         hintText: 'Enter your  Email',
-                        label: Text('Email'),
+                        label: const Text('Email'),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(55),
                           borderSide: const BorderSide(
@@ -148,6 +197,7 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                       ]),
                     )
                   : IntlPhoneField(
+                      controller: number,
                       decoration: InputDecoration(
                         labelText: 'Phone Number',
                         border: OutlineInputBorder(
@@ -162,7 +212,7 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                         print(phone.completeNumber);
                       },
                     ),
-              SizedBox(
+              const SizedBox(
                 height: 5,
               ),
               Row(
@@ -173,6 +223,7 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                             setState(() {
                               isEmail = false;
                               type = 'email';
+                              number.clear();
                             });
                           },
                           child: const Text(
@@ -190,6 +241,7 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                             setState(() {
                               isEmail = true;
                               type = 'number';
+                              email.clear();
                             });
                           },
                           child: const Text(
@@ -208,19 +260,26 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                 controller: password,
                 obscureText: !isVisible,
                 decoration: InputDecoration(
-                  suffixIcon: IconButton(onPressed: (){
-                    setState(() {
-                      isVisible = !isVisible;
-                    });
-                  },
-                      icon: isVisible ? Icon(Icons.visibility, color: Colors.black,) :
-                      Icon(Icons.visibility_off, color: Colors.grey,),
-                    ),
-                  prefixIcon: Icon(Icons.lock_outline),
+                  suffixIcon: IconButton(
+                    onPressed: () {
+                      setState(() {
+                        isVisible = !isVisible;
+                      });
+                    },
+                    icon: isVisible
+                        ? const Icon(
+                            Icons.visibility,
+                            color: Colors.black,
+                          )
+                        : const Icon(
+                            Icons.visibility_off,
+                            color: Colors.grey,
+                          ),
+                  ),
+                  prefixIcon: const Icon(Icons.lock_outline),
                   hintText: 'Enter password',
-                  label: Text('Password'),
+                  label: const Text('Password'),
                   border: OutlineInputBorder(
-
                     borderRadius: BorderRadius.circular(55),
                     borderSide: const BorderSide(
                       color: Color(0xffA87B5D),
@@ -229,25 +288,46 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                 ),
                 validator: MultiValidator([
                   RequiredValidator(errorText: 'password is required'),
-                  MinLengthValidator(8,
-                      errorText: 'password must be least 8 digits long'),
-                  PatternValidator(r'(?=.*?[#?!@$%^&*-])',
-                      errorText:
-                          'passwords must have at least one special character')
-                ]),
+                  // MinLengthValidator(8,
+                  //     errorText: 'password must be at least 8 digits long'),
+                  // PatternValidator(r'(?=.*?[#?!@$%^&*-])',
+                  //     errorText:
+                  //         'passwords must have at least one special character')
+                ]
+                ),
               ),
-              SizedBox(height: 50),
+              const SizedBox(height: 50),
               SizedBox(
                 height: 40,
                 width: 150,
                 child: ElevatedButton(
-                    style: ButtonStyle(
-                      backgroundColor:
-                          MaterialStateProperty.all(Color(0xffA87B5D)),
-                    ),
+                    style: ElevatedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30.0)
+                      ),
+                      backgroundColor: const Color(0xffA87B5D)),
+                          // MaterialStateProperty.all(Color(0xffA87B5D)),
                     child: _loading
-                        ? CircularProgressIndicator()
-                        : Text(
+                        ? Row(
+                            children: const [
+                              SizedBox(
+                                child: CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white),
+                                  strokeWidth: 1.5,
+                                ),
+                                height: 30,
+                                width: 30,
+                              ),
+                              Padding(padding: EdgeInsets.only(left: 10)),
+                              Text(
+                                "Please Wait",
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold, fontSize: 15),
+                              ),
+                            ],
+                          )
+                        : const Text(
                             "Log In",
                             style: TextStyle(
                                 fontWeight: FontWeight.bold,
@@ -255,10 +335,24 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                                 fontSize: 20),
                           ),
                     onPressed: () async {
-                      login(email.text, password.text);
-                      final SharedPreferences sharedPreferences =
-                          await SharedPreferences.getInstance();
-                      sharedPreferences.setString('email', email.text);
+                      bool isConnected = await InternetConnectionChecker().hasConnection;
+                      if(isConnected) {
+                        if (number.text.isNotEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text('Please use email to log in!')),
+                          );
+                          return;
+                        }
+                        _formKey.currentState!.validate();
+                        login(email.text, password.text);
+                        final SharedPreferences sharedPreferences =
+                        await SharedPreferences.getInstance();
+                        sharedPreferences.setString('email', email.text);
+                      } else {
+                        showDialogBox();
+                        _loading =false;
+                      }
                     }),
               ),
               FittedBox(
@@ -272,14 +366,17 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                           color: Color.fromARGB(255, 2, 1, 1),
                           fontWeight: FontWeight.bold),
                     ),
-                    SizedBox(
+                    const SizedBox(
                       height: 150,
                     ),
                     TextButton(
                       onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(builder: (context) => Signup()),
+                        Get.to(()=> Signup(), transition: Transition.circularReveal,
+                        duration: const Duration(seconds: 1)
                         );
+                        // Navigator.of(context).push(
+                        //   MaterialPageRoute(builder: (context) => Signup()),
+                        // );
                       },
                       child: const Text(
                         "Sign Up",
@@ -300,4 +397,30 @@ class _MyCustomFormSate extends State<MyCustomForm> {
       ),
     );
   }
+
+
+  checkInternetWorking() async {
+    final response = await http.get(Uri.parse('https://www.google.com'));
+    return response.statusCode == 200;
+  }
+  showDialogBox() => showCupertinoDialog(
+      context: context,
+      builder: (BuildContext context) => CupertinoAlertDialog(
+        title:  const Text("No Connection"),
+        content: const Text("Please Check your Internet Connection"),
+        actions: [
+          TextButton(onPressed: () async {
+            Navigator.pop(context, 'Cancel');
+            setState(() => isAlertSet = false);
+            isDeviceConnected = await InternetConnectionChecker().hasConnection;
+            // if(!isDeviceConnected){
+            //   showDialogBox();
+            //   setState(() => isAlertSet = true);
+            // }
+          },
+              child: Text("OK"),
+          )
+        ],
+      )
+  );
 }

@@ -1,19 +1,20 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:form_field_validator/form_field_validator.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:maps/Screens/Login.dart';
 import 'package:maps/Screens/User_Model.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
-
-void main() {
-  runApp(MyApp());
-}
+import 'package:http/http.dart' as http;
 
 const List<String> list = <String>[
   'Male',
@@ -29,7 +30,6 @@ class MyApp extends StatelessWidget {
 }
 
 class Signup extends StatefulWidget {
-
   @override
   State<Signup> createState() => _SignupState();
 }
@@ -61,38 +61,77 @@ class MyCustomForm extends StatefulWidget {
 }
 
 class _MyCustomFormSate extends State<MyCustomForm> {
-  late final TextEditingController picture =
+  late StreamSubscription subscription;
+  var isDeviceConnected = false;
+  bool isAlertSet = false;
+  bool isInternetWorking = true;
 
-  TextEditingController();
+  @override
+  void initState() {
+    getConnectivity();
+    super.initState();
+  }
+
+  getConnectivity() {
+    subscription = Connectivity()
+        .onConnectivityChanged
+        .listen((ConnectivityResult result) async {
+      isDeviceConnected = await InternetConnectionChecker().hasConnection;
+      if (isDeviceConnected &&
+          isInternetWorking == false &&
+          isAlertSet == false) {
+        isInternetWorking = await checkInternetWorking();
+        if (isInternetWorking == false) {
+          showDialogBox();
+          setState(() => isAlertSet = true);
+        }
+      } else if (!isDeviceConnected && isAlertSet == false) {
+        showDialogBox();
+        setState(() => isAlertSet = true);
+      }
+    });
+  }
+
+  late final TextEditingController picture = TextEditingController();
   File? _image;
   final picker = ImagePicker();
-  bool loading = false;
-  firebase_storage.FirebaseStorage storage= firebase_storage.FirebaseStorage.instance;
-  DatabaseReference databaseRef= FirebaseDatabase.instance.ref('User');
+
+  // bool loading = false;
+  firebase_storage.FirebaseStorage storage =
+      firebase_storage.FirebaseStorage.instance;
+  DatabaseReference databaseRef = FirebaseDatabase.instance.ref('User');
+
   @override
   Future getImage() async {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title:  const Text("Select Image", style:TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-          ),),
-          content: const Text("Choose the source of the image",style:TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-          ),),
+          title: const Text(
+            "Select Image",
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+          ),
+          content: const Text(
+            "Choose the source of the image",
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+          ),
           actions: <Widget>[
             TextButton(
-              child: const Text("Camera",
-                style:TextStyle(
-                    color: Color(0xffA87B5D),
-                    fontWeight: FontWeight.bold ),),
+              child: const Text(
+                "Camera",
+                style: TextStyle(
+                    color: Color(0xffA87B5D), fontWeight: FontWeight.bold),
+              ),
               onPressed: () async {
                 Navigator.of(context).pop();
                 final pickedFile =
-                await picker.pickImage(source: ImageSource.camera);
+                    await picker.pickImage(source: ImageSource.camera);
 
                 if (pickedFile != null) {
                   setState(() {
@@ -103,14 +142,15 @@ class _MyCustomFormSate extends State<MyCustomForm> {
               },
             ),
             TextButton(
-              child: const Text("Gallery",
-                style:TextStyle(
-                    color: Color(0xffA87B5D),
-                    fontWeight: FontWeight.bold ),),
+              child: const Text(
+                "Gallery",
+                style: TextStyle(
+                    color: Color(0xffA87B5D), fontWeight: FontWeight.bold),
+              ),
               onPressed: () async {
                 Navigator.of(context).pop();
                 final pickedFile =
-                await picker.pickImage(source: ImageSource.gallery);
+                    await picker.pickImage(source: ImageSource.gallery);
 
                 if (pickedFile != null) {
                   setState(() {
@@ -141,7 +181,9 @@ class _MyCustomFormSate extends State<MyCustomForm> {
   bool isVisible = false;
   bool isEmail = false;
   int? _value = 1;
-  String? errorMessage;
+  var errorMessage = "";
+
+  // String? errorMessage;
 
   @override
   void dispose() {
@@ -151,9 +193,11 @@ class _MyCustomFormSate extends State<MyCustomForm> {
     name.dispose();
     lastname.dispose();
     Confirmpassword.dispose();
+    subscription.cancel();
     // TODO: implement dispose
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -164,15 +208,16 @@ class _MyCustomFormSate extends State<MyCustomForm> {
           // autovalidateMode: AutovalidateMode.onUserInteraction,
           child: Column(
             children: [
+              const SizedBox(height: 5),
               TextFormField(
                 onSaved: (value) {
                   name.text = value!;
                 },
                 controller: name,
                 decoration: InputDecoration(
-                  prefixIcon: Icon(Icons.person),
+                  prefixIcon: const Icon(Icons.person),
                   hintText: 'Enter your name',
-                  label: Text('First Name'),
+                  label: const Text('First Name'),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(55),
                     borderSide: const BorderSide(
@@ -183,20 +228,19 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                 validator: MultiValidator([
                   RequiredValidator(errorText: "Name required"),
                   MinLengthValidator(3,
-                      errorText: "Name must be at least of 3 chars"),
+                      errorText: "Name must be more than 2 Characters"),
                 ]),
               ),
-              const SizedBox(height:20),
+              const SizedBox(height: 20),
               TextFormField(
                 controller: lastname,
                 onSaved: (value) {
                   lastname.text = value!;
                 },
                 decoration: InputDecoration(
-
-                  prefixIcon:  Icon(Icons.person),
+                  prefixIcon: const Icon(Icons.person),
                   hintText: 'Enter your name',
-                  label: Text('Last Name'),
+                  label: const Text('Last Name'),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(55),
                     borderSide: const BorderSide(
@@ -207,17 +251,19 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                 validator: MultiValidator([
                   RequiredValidator(errorText: "Name required"),
                   MinLengthValidator(3,
-                      errorText: "Name must be at least of 3 chars"),
+                      errorText: "Name must be more than 2 Characters"),
                 ]),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               type == 'email'
                   ? TextFormField(
+                      autofillHints: const [AutofillHints.email],
+                      keyboardType: TextInputType.emailAddress,
                       controller: email,
                       decoration: InputDecoration(
-                        prefixIcon: Icon(Icons.email),
+                        prefixIcon: const Icon(Icons.email),
                         hintText: 'Enter your  Email',
-                        label: Text('Email'),
+                        label: const Text('Email'),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(55),
                           borderSide: const BorderSide(
@@ -250,103 +296,82 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                 children: [
                   isEmail
                       ? TextButton(
-                    onPressed: () {
-                      setState(() {
-                        isEmail = false;
-                        type = 'email';
-                      });
-                    },
-                    child: const Text(
-                      "Use Email",
-                      style: TextStyle(
-                          color: Colors.redAccent,
-                          fontWeight: FontWeight.bold,
-                          fontStyle: FontStyle.italic,
-                          fontFamily: 'RaleWay'),
-                    ),
-                  )
+                          onPressed: () {
+                            setState(() {
+                              isEmail = false;
+                              type = 'email';
+                              number.clear();
+                            });
+                          },
+                          child: const Text(
+                            "Use Email",
+                            style: TextStyle(
+                                color: Colors.redAccent,
+                                fontWeight: FontWeight.bold,
+                                fontStyle: FontStyle.italic,
+                                fontFamily: 'RaleWay'),
+                          ),
+                        )
                       : TextButton(
-                    onPressed: () {
-                      setState(() {
-                        isEmail = true;
-                        type = 'number';
-                      });
-                    },
-                    child: const Text(
-                      "Use Phone Number Instead?",
-                      style: TextStyle(
-                        color: Colors.redAccent,
-                        fontWeight: FontWeight.bold,
-                        fontStyle: FontStyle.italic,
-                        fontFamily: 'RaleWay',
-                      ),
-                    ),
-                  ),
+                          onPressed: () {
+                            setState(() {
+                              isEmail = true;
+                              type = 'number';
+                              email.clear();
+                            });
+                          },
+                          child: const Text(
+                            "Use Phone Number Instead?",
+                            style: TextStyle(
+                              color: Colors.redAccent,
+                              fontWeight: FontWeight.bold,
+                              fontStyle: FontStyle.italic,
+                              fontFamily: 'RaleWay',
+                            ),
+                          ),
+                        ),
                 ],
               ),
-              SizedBox(
-                height: 0,
-              ),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _image != null? Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      image: DecorationImage(
+              Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                _image != null
+                    ? Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                            image: DecorationImage(
                           image: FileImage(_image!),
-                      fit: BoxFit.cover,
+                          fit: BoxFit.cover,
+                        )),
                       )
-                    ),
-                  ) : Container(),
-                  // SizedBox(height: 20,),
-                  TextFormField(
-                    controller: picture,
-                    decoration: InputDecoration(
+                    : Container(),
+                const SizedBox(
+                  height: 10,
+                ),
+                TextFormField(
+                  readOnly: true,
+                  controller: picture,
+                  decoration: InputDecoration(
                       labelText: "Please Insert Image Here",
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(50),
-                        borderSide: BorderSide(
+                        borderSide: const BorderSide(
                           color: Colors.black,
                         ),
                       ),
                       prefixIcon: GestureDetector(
                         onTap: getImage,
-                        child: Icon(Icons.camera_alt),
-                      )
-                    ),
-                  )
-                ]
-              ),
-              SizedBox(
-                height: 15,
-              ),
-              // TextFormField(
-              //   controller: _textEditingController,
-              //   decoration: InputDecoration(
-              //     labelText: "Please Insert Image Here",
-              //     border: OutlineInputBorder(
-              //       borderRadius: BorderRadius.circular(50),
-              //       borderSide:  BorderSide(
-              //         color: Color(0xffA87B5D),
-              //       )
-              //     ),
-              //     prefixIcon:  GestureDetector(
-              //       onTap: getImage,
-              //       child: Icon(Icons.camera_alt),
-              //     ),
-              //   ),
-              //   validator: (value){
-              //     if (_image !=null){
-              //       return 'Preview of selected image:';
-              //     }
-              //     return null;
-              //   },
-              //   initialValue: _image != null ? _image!.path : null,
+                        child: const Icon(Icons.camera_alt),
+                      )),
+                  validator: MultiValidator([
+                    RequiredValidator(
+                        errorText: 'Image is Necessary PLease Image')
+                  ]),
+                )
+              ]),
+              // SizedBox(
+              //   height: 15,
               // ),
-
-              SizedBox(height: 5),
+              const SizedBox(height: 15),
               TextFormField(
                 onSaved: (value) {
                   password.text = value!;
@@ -354,17 +379,25 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                 controller: password,
                 obscureText: !isVisible,
                 decoration: InputDecoration(
-                  suffixIcon: IconButton(onPressed: (){
-                    setState(() {
-                      isVisible = !isVisible;
-                    });
-                  },
-                    icon: isVisible ? Icon(Icons.visibility, color: Colors.black,) :
-                    Icon(Icons.visibility_off, color: Colors.grey,),
+                  suffixIcon: IconButton(
+                    onPressed: () {
+                      setState(() {
+                        isVisible = !isVisible;
+                      });
+                    },
+                    icon: isVisible
+                        ? const Icon(
+                            Icons.visibility,
+                            color: Colors.black,
+                          )
+                        : const Icon(
+                            Icons.visibility_off,
+                            color: Colors.grey,
+                          ),
                   ),
-                  prefixIcon: Icon(Icons.vpn_key),
+                  prefixIcon: const Icon(Icons.vpn_key),
                   hintText: 'Enter password',
-                  label: Text('Password'),
+                  label: const Text('Password'),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(55),
                     borderSide: const BorderSide(
@@ -372,117 +405,72 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                     ),
                   ),
                 ),
-                validator: (value){
+                validator: (value) {
                   value ??= '';
-                  if (value.isEmpty)
-                    {
-                      return 'Please Enter Password';
-                    }
-                  if (value.length<8) {
-                        return 'Password must be 8 Character long';
-                      }
-                      if (!RegExp(r'[!@#$%^&*(),.?:|<>]').hasMatch(value)){
-                        return 'Password must contain at least one Special Character';
-                      }
-                  return null;
-                },
-                // validator:  (value){
-                //   value ??= '';
-                //   if (value.isEmpty){
-                //     return 'Please Enter a Password';
-                //   }
-                //   if (value.length<8) {
-                //     return 'Passwprd must be 8 Character long';
-                //   }
-                //   if (!RegExp(r'[!@#$%^&*(),.?:|<>]').hasMatch(value)){
-                //     return 'Password must contain at least one Special Character';
-                //   }
-                //   return null;
-                // },
-                // validator: MultiValidator([
-                //   RequiredValidator(errorText: 'password is required'),
-                //   MinLengthValidator(8,
-                //       errorText: 'password must be least 8 digits long'),
-                //   PatternValidator(r'(?=.*?[#?!@$%^&*-])',
-                //       errorText:
-                //           'passwords must have at least one special character'),
-                // ]),
-              ),
-              SizedBox(height: 30),
-              TextFormField(
-                // onSaved: (value) {
-                //   Confirmpassword.text = value!;
-                // },
-                controller: Confirmpassword,
-                obscureText: !isVisible,
-                decoration: InputDecoration(
-                  suffixIcon: IconButton(onPressed: (){
-                    setState(() {
-                      isVisible = !isVisible;
-                    });
-                  },
-                    icon: isVisible ? Icon(Icons.visibility, color: Colors.black,) :
-                    Icon(Icons.visibility_off, color: Colors.grey,),
-                  ),
-                  prefixIcon: Icon(Icons.vpn_key_off),
-                  hintText: 'Enter password',
-                  label: Text('Confirm Password'),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(55),
-                    borderSide: const BorderSide(
-                      color: Color(0xffA87B5D),
-                    ),
-                  ),
-                ),
-                validator: (value){
-                  value ??= '';
-                  if (value.isEmpty)
-                    {
-                      return 'Please Re-Enter Password';
-                    }
-                  if (value.length<8) {
-                        return 'Passwprd must be 8 Character long';
-                      }
-                      if (!RegExp(r'[!@#$%^&*(),.?:|<>]').hasMatch(value)){
-                        return 'Password must contain at least one Special Character';
-                      }
-                  print(password.text);
-                  print(Confirmpassword.text);
-                  if (password.text!= Confirmpassword.text){
-                    return 'Password and Confirm Password Does not Match';
+                  if (value.isEmpty) {
+                    return 'Please Enter Password';
+                  }
+                  if (value.length < 8) {
+                    return 'Password must be 8 Character long';
+                  }
+                  if (!RegExp(r'[!@#$%^&*(),.?:|<>]').hasMatch(value)) {
+                    return 'Password must contain at least one Special Character';
                   }
                   return null;
                 },
-                // validator:  (value){
-                //   value ??='';
-                //   if (value.isEmpty){
-                //     return 'Please Enter a Password';
-                //   }
-                //   if (value.length<8) {
-                //     return 'Passwprd must be 8 Character long';
-                //   }
-                //   if (!RegExp(r'[!@#$%^&*(),.?:|<>]').hasMatch(value)){
-                //     return 'Password must contain at least one Special Character';
-                //   }
-                //   if (value!= _password){
-                //     return 'Password do not match';
-                //   }
-                //   return null;
-                // },
-
-
-                // validator: MultiValidator([
-                //   RequiredValidator(errorText: 'password is required'),
-                //   MinLengthValidator(8,
-                //       errorText: 'password must be least 8 digits long'),
-                //   PatternValidator(r'(?=.*?[#?!@$%^&*-])',
-                //       errorText:
-                //           'passwords must have at least one special character'),
-                //
-                // ]),
               ),
-              SizedBox(height: 20),
-              const  Text(
+              const SizedBox(height: 20),
+              TextFormField(
+                controller: Confirmpassword,
+                obscureText: !isVisible,
+                decoration: InputDecoration(
+                  suffixIcon: IconButton(
+                    onPressed: () {
+                      setState(() {
+                        isVisible = !isVisible;
+                      });
+                    },
+                    icon: isVisible
+                        ? const Icon(
+                            Icons.visibility,
+                            color: Colors.black,
+                          )
+                        : const Icon(
+                            Icons.visibility_off,
+                            color: Colors.grey,
+                          ),
+                  ),
+                  prefixIcon: const Icon(Icons.vpn_key_off),
+                  hintText: 'Enter password',
+                  label: const Text('Confirm Password'),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(55),
+                    borderSide: const BorderSide(
+                      color: Color(0xffA87B5D),
+                    ),
+                  ),
+                ),
+                validator: (value) {
+                  value ??= '';
+                  if (value.isEmpty) {
+                    return 'Please Re-Enter Password';
+                  }
+                  // if (value.length < 8) {
+                  //   return 'Passwprd must be 8 Character long';
+                  // }
+                  // if (!RegExp(r'[!@#$%^&*(),.?:|<>]').hasMatch(value)) {
+                  //   return 'Password must contain at least one Special Character';
+                  // }
+                  print(password.text);
+                  print(Confirmpassword.text);
+                  if (password.text != Confirmpassword.text) {
+                    return 'Password Does not Match';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 20),
+              const Text(
                 "Gender",
                 style: TextStyle(
                     fontWeight: FontWeight.w900,
@@ -499,8 +487,8 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                           _value = Value! as int?;
                         });
                       }),
-                  SizedBox(width: 5),
-                 const Text(
+                  const SizedBox(width: 5),
+                  const Text(
                     "Male",
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
@@ -512,7 +500,7 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                           _value = Value! as int?;
                         });
                       }),
-                  SizedBox(width: 5),
+                  const SizedBox(width: 5),
                   const Text(
                     "Female",
                     style: TextStyle(fontWeight: FontWeight.bold),
@@ -525,24 +513,44 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                           _value = Value! as int?;
                         });
                       }),
-                  SizedBox(width: 5),
-                 const Text(
+                  const SizedBox(width: 5),
+                  const Text(
                     "Others",
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
-              SizedBox(height: 30),
+              const SizedBox(height: 30),
               SizedBox(
                 height: 40,
                 width: 150,
                 child: ElevatedButton(
-                  style: ButtonStyle(
-                    backgroundColor:
-                        MaterialStateProperty.all(Color(0xffA87B5D)),
-                  ),
+                  style: ElevatedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30.0)),
+                      backgroundColor: Color(0xffA87B5D)
+                      // MaterialStateProperty.all(Color(0xffA87B5D)),
+                      ),
                   child: _loading
-                      ? CircularProgressIndicator()
+                      ? Row(
+                          children: const [
+                            SizedBox(
+                              child: CircularProgressIndicator(
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(Colors.white),
+                                strokeWidth: 1.5,
+                              ),
+                              height: 30,
+                              width: 30,
+                            ),
+                            Padding(padding: EdgeInsets.only(left: 10)),
+                            Text(
+                              "Please Wait",
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 16),
+                            ),
+                          ],
+                        )
                       : const Text(
                           "Sign Up",
                           style: TextStyle(
@@ -550,32 +558,56 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                               color: Colors.white,
                               fontSize: 20),
                         ),
-
-                  onPressed: () {
-                    _formKey.currentState!.validate();
-                    {
-                      setState(() {
-                        loading = true;
-                      });
-                      String newurl = '';
-                      firebase_storage.Reference ref =
-                      firebase_storage.FirebaseStorage.instance.ref('/images/'+DateTime.now().millisecondsSinceEpoch.toString());
-                      firebase_storage.UploadTask uploadTask= ref.putFile(_image!.absolute);
-
-                      Future.value(uploadTask).then((value) async{
-                        var newurl = await ref.getDownloadURL();
-                        signUp(email.text, password.text, newurl);
-                        // postdetailsrealtimedatabase(newurl);
-                        // databaseRef.child('1').set({
-                        //   /*'id': '1212',
-                        //   'title': newurl.toString()*/
-                        // });
-                      }).onError((error, stackTrace){
-                      });
-
-                    };
+                  onPressed: () async {
+                    bool isConnected =
+                        await InternetConnectionChecker().hasConnection;
+                    if (isConnected) {
+                      if (_formKey.currentState!.validate()) {
+                        if (number.text.isNotEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text('Please use email to sign up!')),
+                          );
+                          return;
+                        }
+                        return setState(() {
+                          _loading = true;
+                          {
+                            String newurl = '';
+                            firebase_storage.Reference ref = firebase_storage
+                                .FirebaseStorage.instance
+                                .ref('/images/' +
+                                    DateTime.now()
+                                        .millisecondsSinceEpoch
+                                        .toString());
+                            firebase_storage.UploadTask uploadTask =
+                                ref.putFile(_image!.absolute);
+                            Future.value(uploadTask).then((value) async {
+                              var newurl = await ref.getDownloadURL();
+                              signUp(email.text, password.text, newurl);
+                              // postdetailsrealtimedatabase(newurl);
+                              // databaseRef.child('1').set({
+                              //   /*'id': '1212',
+                              //   'title': newurl.toString()*/
+                              // });
+                              debugPrint(errorMessage);
+                            }).onError((error, stackTrace) {});
+                          }
+                          // Future.delayed(const Duration(seconds: 30), () {
+                          //   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          //       content: Text(
+                          //           "Storage is full you can't sign up right now!")));
+                          //   setState(() {
+                          //     _loading = false;
+                          //   });
+                          // });
+                        });
+                      }
+                    } else {
+                      showDialogBox();
+                      _loading = false;
+                    }
                   },
-
                 ),
               ),
             ],
@@ -585,48 +617,53 @@ class _MyCustomFormSate extends State<MyCustomForm> {
     );
   }
 
-  void signUp(String email, String password, String newUrl) async {
+  Future signUp(String email, String password, String newUrl) async {
     if (_formKey.currentState!.validate()) {
-      setState(() {
-        _loading = true;
-      });
       try {
+        setState(() {
+          _loading = true;
+        });
         await _auth
             .createUserWithEmailAndPassword(email: email, password: password)
-            .then((value) => {
-                  postdetailsrealtimedatabase(newUrl)
-                })
-            .catchError((e) {
-          Fluttertoast.showToast(msg: e!.message);
-        });
+            .then((value) => {postdetailsrealtimedatabase(newUrl)});
       } on FirebaseAuthException catch (error) {
+        errorMessage = 'An error has occurred.'; // default message
+        debugPrint(error.code);
         switch (error.code) {
-          case "invalid-email":
-            errorMessage = "Your email address appears to be malformed.";
+          case 'email-already-in-use':
+            errorMessage = 'Your Email Address Already Exists';
             break;
-          case "wrong-password":
-            errorMessage = "Your password is wrong.";
+          case 'quota-exceeded':
+            errorMessage = 'Storage is full you can not signup right now';
             break;
-          case "user-not-found":
-            errorMessage = "User with this email doesn't exist.";
-            break;
-          case "user-disabled":
-            errorMessage = "User with this email has been disabled.";
-            break;
-          case "too-many-requests":
-            errorMessage = "Too many requests";
-            break;
-          case "operation-not-allowed":
-            errorMessage = "Signing in with Email and Password is not enabled.";
-            break;
-          default:
-            errorMessage = "An undefined Error happened.";
         }
-        Fluttertoast.showToast(msg: errorMessage!);
-        print(error.code);
+        setState(() {
+          _loading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage)),
+        );
       }
     }
   }
+
+  // on FirebaseAuthException catch (error) {
+  //   errorMessage = 'An error has occurred.';
+  //   debugPrint(error.code);
+  //   if (error.code == "email-already-in-use") {
+  //     errorMessage = "Your Email Address Already Exists";
+  //   }
+  //   else if (error.code == "quota-exceeded") {
+  //     errorMessage = "Storage is full you can't sign up right now!";
+  //   }
+  //   setState(() {
+  //     _loading = false;
+  //   });
+  //   ScaffoldMessenger.of(context).showSnackBar(
+  //     SnackBar(content: Text(errorMessage)),
+  //   );
+  // }
+
   postdetailsrealtimedatabase(String newurl) async {
     print("callfunction");
     final referDatabasse = FirebaseDatabase.instance.ref("User");
@@ -635,7 +672,7 @@ class _MyCustomFormSate extends State<MyCustomForm> {
       "id": user.uid.toString(),
       "email": email.text,
       "picture": newurl.toString(),
-      'number': '8856061841',
+      'number': '03186487044',
       "firsname": name.text,
       "lastname": lastname.text,
       "password": password.text,
@@ -653,41 +690,33 @@ class _MyCustomFormSate extends State<MyCustomForm> {
           fontSize: 16.0);
       Navigator.pushAndRemoveUntil((context),
           MaterialPageRoute(builder: (context) => Login()), (route) => false);
-    }).onError((error, stackTrace) {
-      Fluttertoast.showToast(
-        msg: error.toString(),
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.CENTER,
-        timeInSecForIosWeb: 1,
-        backgroundColor: const Color(0xffA87B5D),
-        textColor: Colors.white,
-        fontSize: 16.0,
-      );
     });
-
-
-    postDetailsToFirestore() async {
-      // calling our firestore
-      // calling our user model
-      // sedning these values
-
-      FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
-      User? user = _auth.currentUser;
-      UserModel userModel = UserModel();
-      // writing all the values
-      userModel.email = user!.email;
-      userModel.uid = user.uid;
-      userModel.firstname = name.text;
-      userModel.lastname = lastname.text;
-
-      await firebaseFirestore
-          .collection("users")
-          .doc(user.uid)
-          .set(userModel.toMap());
-      Fluttertoast.showToast(msg: "Account created successfully :) ");
-
-      Navigator.pushAndRemoveUntil((context),
-          MaterialPageRoute(builder: (context) => Login()), (route) => false);
-    }
   }
+
+  checkInternetWorking() async {
+    final response = await http.get(Uri.parse('https://www.google.com'));
+    return response.statusCode == 200;
+  }
+
+  showDialogBox() => showCupertinoDialog(
+      context: context,
+      builder: (BuildContext context) => CupertinoAlertDialog(
+            title: const Text("No Connection"),
+            content: const Text("Please Check your Internet Connection"),
+            actions: [
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(context, 'Cancel');
+                  setState(() => isAlertSet = false);
+                  isDeviceConnected =
+                      await InternetConnectionChecker().hasConnection;
+                  // if(!isDeviceConnected){
+                  //   showDialogBox();
+                  //   setState(() => isAlertSet = true);
+                  // }
+                },
+                child: const Text("OK"),
+              )
+            ],
+          ));
 }

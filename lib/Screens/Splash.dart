@@ -13,6 +13,9 @@ class Splash extends StatefulWidget {
   State<Splash> createState() => _SplashState();
 }
 class _SplashState extends State<Splash> {
+
+
+
   @override
   void initState() {
     getValidation().whenComplete(
@@ -20,7 +23,7 @@ class _SplashState extends State<Splash> {
         Timer( const
           Duration(milliseconds: 55),
           () {
-            Get.off(()=> emailStored== null? Login() : const marker());
+            Get.off(()=> emailStored == null? Login() : const HomeScreen());
           // Navigator.pushNamedAndRemoveUntil(
           //                   (context),
           //                   MaterialPageRoute(builder: (context) => emailStored== null? Login() : homepage()),
@@ -39,7 +42,9 @@ class _SplashState extends State<Splash> {
     );
     super.initState();
   }
-  Future getValidation() async {
+
+
+   getValidation() async {
     final SharedPreferences sharedPreferences =
         await SharedPreferences.getInstance();
     var getemail = sharedPreferences.getString('email');
@@ -47,6 +52,8 @@ class _SplashState extends State<Splash> {
       emailStored = getemail;
     });
   }
+
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(

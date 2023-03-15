@@ -1,24 +1,44 @@
 import 'dart:async';
-
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:internet_connection_checker/internet_connection_checker.dart';
+import 'package:maps/Screens/Login.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:image/image.dart' as IMG;
 
-class marker extends StatefulWidget {
-  const marker({Key? key}) : super(key: key);
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({Key? key}) : super(key: key);
 
   @override
-  State<marker> createState() => _markerState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _markerState extends State<marker> {
+class _HomeScreenState extends State<HomeScreen> {
+
+
+
+  late StreamSubscription subscription;
+  var isDeviceConnected = false;
+  bool isAlertSet = false;
+
+  getConnectivity() =>
+      subscription = Connectivity().onConnectivityChanged.listen(
+        (ConnectivityResult result) async {
+          isDeviceConnected = await InternetConnectionChecker().hasConnection;
+          if (!isDeviceConnected && isAlertSet == false) {
+            showDialogBox();
+            setState(() => isAlertSet = true);
+          }
+        },
+      );
 
   getUserCurrentLocation() async {
     await Geolocator.requestPermission()
@@ -54,7 +74,7 @@ class _markerState extends State<marker> {
               toastLength: Toast.LENGTH_SHORT,
               gravity: ToastGravity.CENTER,
               timeInSecForIosWeb: 1,
-              backgroundColor: Color(0xffA87B5D),
+              backgroundColor: const Color(0xffA87B5D),
               textColor: Colors.white,
               fontSize: 16.0);
         }).onError((error, stackTrace) {
@@ -75,7 +95,7 @@ class _markerState extends State<marker> {
   double? longitudeAddress;
   double? LatitudeAddress;
 
-  Future<bool> _onWillPop() async {
+  Future<bool>_onWillPop() async {
     SystemNavigator.pop();
     return false;
   }
@@ -96,26 +116,46 @@ class _markerState extends State<marker> {
     return resizedData;
   }
 
-  Hello(){
+  hello() async {
+    // database.ref().update(Map());
+    // database.ref().child('User').onValue.forEach((element) {});
     database.ref().child('User').onValue.listen((event) {
       setState(() {
         // markers.clear();
         Map<dynamic, dynamic> markerData =
-        event.snapshot.value as Map<dynamic, dynamic>;
+            event.snapshot.value as Map<dynamic, dynamic>;
         latitude = event.snapshot.value;
         markerData.forEach((key, value) async {
-          Uint8List bytes = (await NetworkAssetBundle(Uri.parse(value["picture"])).load(value["picture"]))
-              .buffer
-              .asUint8List();
+          Uint8List bytes =
+              (await NetworkAssetBundle(Uri.parse(value["picture"]))
+                      .load(value["picture"]))
+                  .buffer
+                  .asUint8List();
           bytes = resizeImage(bytes);
           markers.add(
             Marker(
-              icon: BitmapDescriptor.fromBytes(bytes),
+              icon: BitmapDescriptor.defaultMarker,
               markerId: MarkerId(key),
               position: LatLng(value["lat"], value["long"]),
-              infoWindow: InfoWindow(
-                title: value["firsname"],
-              ),
+              onTap: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) => Container(
+                    height: 10,
+                    width: double.infinity,
+                    child: Row(children: [
+                      AlertDialog(
+                        title: Text(value["firsname"]),
+                        content: CircleAvatar(
+                          backgroundImage: NetworkImage(value["picture"]),
+                          maxRadius: 75,
+                          minRadius: 50,
+                        ),
+                      ),
+                    ]),
+                  ),
+                );
+              },
             ),
           );
         });
@@ -127,11 +167,9 @@ class _markerState extends State<marker> {
   void initState() {
     super.initState();
     getUserCurrentLocation();
-    Hello();
-
+    hello();
+    getConnectivity();
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -142,52 +180,122 @@ class _markerState extends State<marker> {
       strokeWidth: 3,
       triggerMode: RefreshIndicatorTriggerMode.onEdge,
       onRefresh: () async {
-        await Hello();
+        await hello();
       },
       child: WillPopScope(
         onWillPop: _onWillPop,
         child: SafeArea(
           child: Scaffold(
-            body: GoogleMap(
-              onMapCreated: (GoogleMapController controller) {
-                googleMapController = controller;
-              },
-              initialCameraPosition: const CameraPosition(
-                target: LatLng(30.157457, 71.524918),
-                zoom: 14.4746,
-              ),
-              myLocationButtonEnabled: true,
-              markers: Set<Marker>.of(markers),
+            body: StreamBuilder(
+              stream: database.ref().child("User").onValue,
+              // StreamView(Stream.fromFuture(hello())),
+              builder: (context, snapshot) {
+                return GoogleMap(
+                  onMapCreated: (GoogleMapController controller) {
+                    googleMapController = controller;
+                  },
+                  initialCameraPosition: const CameraPosition(
+                    target: LatLng(30.157457, 71.524918),
+                    zoom: 14.4746,
+                  ),
+                  myLocationButtonEnabled: true,
+                  markers: Set<Marker>.of(markers),
+                );
+              }
             ),
-            floatingActionButton: FloatingActionButton.extended(
-              onPressed: () async {
-                try {
-                  Position position = await _determinePosition();
-                  googleMapController
-                      .animateCamera(CameraUpdate.newCameraPosition(
-                    CameraPosition(
-                      target: LatLng(position.latitude, position.longitude),
-                      zoom: 14.0,
-                    ),
-                  ));
-                  Hello();
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(e.toString()),
-                  ));
-                }
-              },
-              //   Position position = await _determinePosition();
-              //   googleMapController.animateCamera(CameraUpdate.newCameraPosition(
-              //       CameraPosition(
-              //           target:LatLng(position.latitude, position.longitude),
-              //         zoom: 14.0,
-              //       ),
-              //   ));
-              // },
-              label: const Text("Current Location"),
-              icon: const Icon(Icons.location_history),
-              backgroundColor: const Color(0xffA87B5D),
+            floatingActionButton: Column(
+              children: [
+                Container(
+                    padding: const EdgeInsets.only(bottom: 518, right: 10),
+                    child: TextButton(
+                        onPressed: () {
+                          showDialog(
+                              context: context,
+                              builder: (BuildContext context) => AlertDialog(
+                                    title: const Text("Logout"),
+                                    content: const Text(
+                                      "Do you really want to Log out?",
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.black),
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                          onPressed: () {
+                                            Navigator.pop(context);
+                                          },
+                                          child: const Text(
+                                            "Cancel",
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.greenAccent),
+                                          )),
+                                      TextButton(
+                                          onPressed: () {
+                                            // Navigator.pushReplacement(
+                                            //     context,
+                                            //     MaterialPageRoute(
+                                            //         builder: (BuildContext
+                                            //                 context) =>
+                                            //             Login()));
+                                            Navigator.pushAndRemoveUntil(
+                                                context,
+                                                MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        Login()),
+                                                (route) => false);
+                                            // Get.to(() => Login());
+                                          },
+                                          child: const Text(
+                                            "Logout",
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.redAccent),
+                                          )),
+                                    ],
+                                  ));
+                        },
+                        child: Padding(
+                            padding: const EdgeInsets.only(left: 60, top: 50),
+                            child: Container(
+                                color: Colors.red,
+                                child: const Icon(
+                                  Icons.exit_to_app,
+                                  size: 40,
+                                  color: Colors.white,
+                                )),
+                        ))),
+                Container(
+                  width: 120,
+                  height: 160,
+                  padding:
+                      const EdgeInsets.only(bottom: 100, left: 90, top: 10),
+                  child: FloatingActionButton(
+                    child: const Icon(Icons.gps_fixed),
+                    onPressed: () async {
+                      try {
+                        Position position = await _determinePosition();
+                        googleMapController
+                            .animateCamera(CameraUpdate.newCameraPosition(
+                          CameraPosition(
+                            target:
+                                LatLng(position.latitude, position.longitude),
+                            zoom: 14.0,
+                          ),
+                        ));
+                        await hello();
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text(e.toString()),
+                        ));
+                      }
+                    },
+                    // label: const Text("Current Location"),
+                    // icon: const Icon(Icons.calculate),
+                    // backgroundColor: const Color(0xffA87B5D),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -195,7 +303,7 @@ class _markerState extends State<marker> {
     );
   }
 
-  Future<Position> _determinePosition() async {
+  _determinePosition() async {
     bool serviceEnabled;
     LocationPermission permission;
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -217,7 +325,7 @@ class _markerState extends State<marker> {
     return position;
   }
 
-  Future<void> requestLocationPermission() async {
+  requestLocationPermission() async {
     final status = await Permission.location.status;
     if (status != PermissionStatus.granted) {
       final result = await Permission.location.request();
@@ -243,4 +351,26 @@ class _markerState extends State<marker> {
           );
         });
   }
+
+  showDialogBox() => showCupertinoDialog(
+      context: context,
+      builder: (BuildContext context) => CupertinoAlertDialog(
+            title: const Text("No Connection"),
+            content: const Text("Please Check your Internet Connection"),
+            actions: [
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(context, 'Cancel');
+                  setState(() => isAlertSet = false);
+                  isDeviceConnected =
+                      await InternetConnectionChecker().hasConnection;
+                  if (!isDeviceConnected) {
+                    showDialogBox();
+                    setState(() => isAlertSet = true);
+                  }
+                },
+                child: const Text("OK"),
+              )
+            ],
+          ));
 }

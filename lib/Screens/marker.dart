@@ -23,8 +23,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
 
-
-
   late StreamSubscription subscription;
   var isDeviceConnected = false;
   bool isAlertSet = false;
@@ -186,11 +184,25 @@ class _HomeScreenState extends State<HomeScreen> {
         onWillPop: _onWillPop,
         child: SafeArea(
           child: Scaffold(
-            body: StreamBuilder(
-              stream: database.ref().child("User").onValue,
+            body:
               // StreamView(Stream.fromFuture(hello())),
-              builder: (context, snapshot) {
-                return GoogleMap(
+                // if (!snapshot.hasData || snapshot.data == null) {
+                //   return const CircularProgressIndicator();
+                // }
+                // Map<String,dynamic> userData = snapshot.data!.snapshot.value;
+                // List<Marker> newMarkers = [];
+                // userData.forEach((key, value) {
+                //   double latitude = value["lat"];
+                //   double longitude = value["long"];
+                //   String userName = value["firsname"];
+                //   Marker newMarker = Marker(
+                //     markerId: MarkerId(key),
+                //     position: LatLng(latitude, longitude),
+                //     infoWindow: InfoWindow(title: userName ),
+                //   );
+                //   newMarkers.add(newMarker);
+                // });
+                GoogleMap(
                   onMapCreated: (GoogleMapController controller) {
                     googleMapController = controller;
                   },
@@ -200,9 +212,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   myLocationButtonEnabled: true,
                   markers: Set<Marker>.of(markers),
-                );
-              }
-            ),
+                ),
             floatingActionButton: Column(
               children: [
                 Container(

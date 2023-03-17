@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -12,7 +11,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:maps/Screens/Login.dart';
-import 'package:maps/Screens/User_Model.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:http/http.dart' as http;
 
@@ -616,8 +614,7 @@ class _MyCustomFormSate extends State<MyCustomForm> {
       ),
     );
   }
-
-  Future signUp(String email, String password, String newUrl) async {
+  signUp(String email, String password, String newUrl) async {
     if (_formKey.currentState!.validate()) {
       try {
         setState(() {

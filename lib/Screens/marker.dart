@@ -143,7 +143,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     width: double.infinity,
                     child: Row(children: [
                       AlertDialog(
-                        title: Text(value["firsname"]),
+                        title: Text(value["firstname"]),
                         content: CircleAvatar(
                           backgroundImage: NetworkImage(value["picture"]),
                           maxRadius: 75,

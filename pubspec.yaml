@@ -62,6 +62,8 @@ dependencies:
   internet_connection_checker: ^1.0.0+1
   connectivity_plus: ^3.0.3
   http: ^0.13.5
+  phone_number: ^1.0.0
+  pin_code_fields: ^7.4.0
   # geocoding: any
   # # geolocator: ^6.2.1
   # location: ^4.2.0

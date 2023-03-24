@@ -337,13 +337,13 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                     onPressed: () async {
                       bool isConnected = await InternetConnectionChecker().hasConnection;
                       if(isConnected) {
-                        if (number.text.isNotEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text('Please use email to log in!')),
-                          );
-                          return;
-                        }
+                        // if (number.text.isNotEmpty) {
+                        //   ScaffoldMessenger.of(context).showSnackBar(
+                        //     const SnackBar(
+                        //         content: Text('Please use email to log in!')),
+                        //   );
+                        //   return;
+                        // }
                         _formKey.currentState!.validate();
                         login(email.text, password.text);
                         final SharedPreferences sharedPreferences =

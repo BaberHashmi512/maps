@@ -14,6 +14,8 @@ import 'package:maps/Screens/Login.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:http/http.dart' as http;
 
+import 'Verifyscreen.dart';
+
 const List<String> list = <String>[
   'Male',
   'Female',
@@ -177,6 +179,7 @@ class _MyCustomFormSate extends State<MyCustomForm> {
   var _confirmpassword;
   bool _loading = false;
   bool isVisible = false;
+  bool ishide= false;
   bool isEmail = false;
   int? _value = 1;
   var errorMessage = "";
@@ -366,9 +369,6 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                   ]),
                 )
               ]),
-              // SizedBox(
-              //   height: 15,
-              // ),
               const SizedBox(height: 15),
               TextFormField(
                 onSaved: (value) {
@@ -420,15 +420,15 @@ class _MyCustomFormSate extends State<MyCustomForm> {
               const SizedBox(height: 20),
               TextFormField(
                 controller: Confirmpassword,
-                obscureText: !isVisible,
+                obscureText: !ishide,
                 decoration: InputDecoration(
                   suffixIcon: IconButton(
                     onPressed: () {
                       setState(() {
-                        isVisible = !isVisible;
+                        ishide = !ishide;
                       });
                     },
-                    icon: isVisible
+                    icon: ishide
                         ? const Icon(
                             Icons.visibility,
                             color: Colors.black,
@@ -557,17 +557,33 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                               fontSize: 20),
                         ),
                   onPressed: () async {
+                    _auth.verifyPhoneNumber(
+                        phoneNumber: "+92"+number.text,
+                        verificationCompleted: (_){},
+                        verificationFailed: (FirebaseAuthException e){
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("boohoo"))
+                          );
+                          // errorMessage.toString();
+                        },
+                        codeSent: (String verificationId, int? token){
+                          Navigator.push(context,
+                              MaterialPageRoute(builder: (context)=> Verifyscreen(verificationId: verificationId,)));
+                        },
+                        codeAutoRetrievalTimeout: (e){errorMessage.toString();
+                        }
+                    );
                     bool isConnected =
                         await InternetConnectionChecker().hasConnection;
                     if (isConnected) {
                       if (_formKey.currentState!.validate()) {
-                        if (number.text.isNotEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text('Please use email to sign up!')),
-                          );
-                          return;
-                        }
+                        // if (number.text.isNotEmpty) {
+                        //   ScaffoldMessenger.of(context).showSnackBar(
+                        //     const SnackBar(
+                        //         content: Text('Please use email to sign up!')),
+                        //   );
+                        //   return;
+                        // }
                         return setState(() {
                           _loading = true;
                           {
@@ -589,7 +605,12 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                               //   'title': newurl.toString()*/
                               // });
                               debugPrint(errorMessage);
-                            }).onError((error, stackTrace) {});
+                            }
+                            ).onError((error, stackTrace) {});
+                            Future.value().then((value) async{
+                              var newurl = await ref.getDownloadURL();
+                              signUpWithPhoneNumber(number.text, password.text, newurl);
+                            });
                           }
                           // Future.delayed(const Duration(seconds: 30), () {
                           //   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -605,6 +626,12 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                       showDialogBox();
                       _loading = false;
                     }
+
+                    // if(email == RegExpMatch){
+                    //   return signUp(email.text, password.text, newUrl );
+                    // } else{
+                    //   return signUpWithPhoneNumber(number.text, password.text, newUrl );
+                    // }
                   },
                 ),
               ),
@@ -614,6 +641,7 @@ class _MyCustomFormSate extends State<MyCustomForm> {
       ),
     );
   }
+
   signUp(String email, String password, String newUrl) async {
     if (_formKey.currentState!.validate()) {
       try {
@@ -624,7 +652,7 @@ class _MyCustomFormSate extends State<MyCustomForm> {
             .createUserWithEmailAndPassword(email: email, password: password)
             .then((value) => {postdetailsrealtimedatabase(newUrl)});
       } on FirebaseAuthException catch (error) {
-        errorMessage = 'An error has occurred.'; // default message
+        errorMessage = 'An error has occurred.';
         debugPrint(error.code);
         switch (error.code) {
           case 'email-already-in-use':
@@ -643,6 +671,48 @@ class _MyCustomFormSate extends State<MyCustomForm> {
       }
     }
   }
+
+  Future<void> signUpWithPhoneNumber(String number, String password, String newUrl) async {
+    if (_formKey.currentState!.validate()) {
+      try {
+        setState(() {
+          _loading = true;
+        });
+        await _auth.verifyPhoneNumber(
+          phoneNumber: number,
+          verificationCompleted: (PhoneAuthCredential credential) async {
+            await _auth.signInWithCredential(credential);
+            postdetailsrealtimedatabase(newUrl);
+          },
+          verificationFailed: (FirebaseAuthException e) {
+          },
+          codeSent: (String verificationId, int? resendToken) async {
+            String smsCode = "123456";
+            PhoneAuthCredential credential = PhoneAuthProvider.credential(verificationId: verificationId, smsCode: smsCode);
+            await _auth.signInWithCredential(credential);
+            postdetailsrealtimedatabase(newUrl);
+          },
+          codeAutoRetrievalTimeout: (String verificationId) {
+          },
+        );
+      } on FirebaseAuthException catch (error) {
+        errorMessage = 'An error has occurred.';
+        debugPrint(error.code);
+        switch (error.code) {
+          case 'quota-exceeded':
+            errorMessage = 'Storage is full you can not signup right now';
+            break;
+        }
+        setState(() {
+          _loading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage)),
+        );
+      }
+    }
+  }
+
 
   // on FirebaseAuthException catch (error) {
   //   errorMessage = 'An error has occurred.';
@@ -669,11 +739,11 @@ class _MyCustomFormSate extends State<MyCustomForm> {
       "id": user.uid.toString(),
       "email": email.text,
       "picture": newurl.toString(),
-      'number': '03186487044',
-      "firsname": name.text,
+      'number': number.text,
+      "firstname": name.text,
       "lastname": lastname.text,
       "password": password.text,
-      "confirmpassword": Confirmpassword.text,
+      "Confirm-password": Confirmpassword.text,
       "gender": "Male",
       "location": "",
     }).then((value) {

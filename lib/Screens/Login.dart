@@ -7,7 +7,6 @@ import 'package:form_field_validator/form_field_validator.dart';
 import 'package:get/get.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
-import 'package:maps/Screens/homepage.dart';
 import 'package:maps/Screens/marker.dart';
 import 'package:maps/Screens/signup.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -311,13 +310,14 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                         ? Row(
                             children: const [
                               SizedBox(
+                                height: 30,
+                                width: 30,
                                 child: CircularProgressIndicator(
                                   valueColor: AlwaysStoppedAnimation<Color>(
                                       Colors.white),
                                   strokeWidth: 1.5,
                                 ),
-                                height: 30,
-                                width: 30,
+
                               ),
                               Padding(padding: EdgeInsets.only(left: 10)),
                               Text(

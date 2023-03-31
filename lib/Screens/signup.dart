@@ -13,7 +13,6 @@ import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:maps/Screens/Login.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:http/http.dart' as http;
-
 import 'Verifyscreen.dart';
 
 const List<String> list = <String>[
@@ -173,13 +172,15 @@ class _MyCustomFormSate extends State<MyCustomForm> {
   final email = TextEditingController();
   final password = TextEditingController();
   final Confirmpassword = TextEditingController();
+  final _codeController = TextEditingController();
+
   final _formKey = GlobalKey<FormState>();
   final FirebaseAuth _auth = FirebaseAuth.instance;
   var _password;
   var _confirmpassword;
   bool _loading = false;
   bool isVisible = false;
-  bool ishide= false;
+  bool ishide = false;
   bool isEmail = false;
   int? _value = 1;
   var errorMessage = "";
@@ -526,20 +527,20 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                   style: ElevatedButton.styleFrom(
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30.0)),
-                      backgroundColor: Color(0xffA87B5D)
+                      backgroundColor: const Color(0xffA87B5D)
                       // MaterialStateProperty.all(Color(0xffA87B5D)),
                       ),
                   child: _loading
                       ? Row(
                           children: const [
                             SizedBox(
+                              height: 30,
+                              width: 30,
                               child: CircularProgressIndicator(
                                 valueColor:
                                     AlwaysStoppedAnimation<Color>(Colors.white),
                                 strokeWidth: 1.5,
                               ),
-                              height: 30,
-                              width: 30,
                             ),
                             Padding(padding: EdgeInsets.only(left: 10)),
                             Text(
@@ -557,26 +558,30 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                               fontSize: 20),
                         ),
                   onPressed: () async {
-                    _auth.verifyPhoneNumber(
-                        phoneNumber: "+92"+number.text,
-                        verificationCompleted: (_){},
-                        verificationFailed: (FirebaseAuthException e){
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("boohoo"))
-                          );
-                          // errorMessage.toString();
-                        },
-                        codeSent: (String verificationId, int? token){
-                          Navigator.push(context,
-                              MaterialPageRoute(builder: (context)=> Verifyscreen(verificationId: verificationId,)));
-                        },
-                        codeAutoRetrievalTimeout: (e){errorMessage.toString();
-                        }
-                    );
                     bool isConnected =
                         await InternetConnectionChecker().hasConnection;
                     if (isConnected) {
                       if (_formKey.currentState!.validate()) {
+                        // _auth.verifyPhoneNumber(
+                        //     phoneNumber: "+92"+number.text,
+                        //     verificationCompleted: (_) {},
+                        //     verificationFailed: (FirebaseAuthException e) {
+                        //       ScaffoldMessenger.of(context).showSnackBar(
+                        //           const SnackBar(content: Text("boohoo")));
+                        //       // errorMessage.toString();
+                        //     },
+                        //     codeSent: (String verificationId, int? token) {
+                        //       Navigator.push(
+                        //           context,
+                        //           MaterialPageRoute(
+                        //               builder: (context) => Verifyscreen(
+                        //                     verificationId: verificationId,
+                        //                   )));
+                        //     },
+                        //     codeAutoRetrievalTimeout: (e) {
+                        //       errorMessage.toString();
+                        //     });
+                        // .................
                         // if (number.text.isNotEmpty) {
                         //   ScaffoldMessenger.of(context).showSnackBar(
                         //     const SnackBar(
@@ -587,30 +592,36 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                         return setState(() {
                           _loading = true;
                           {
-                            String newurl = '';
                             firebase_storage.Reference ref = firebase_storage
                                 .FirebaseStorage.instance
                                 .ref('/images/' +
                                     DateTime.now()
                                         .millisecondsSinceEpoch
                                         .toString());
-                            firebase_storage.UploadTask uploadTask =
-                                ref.putFile(_image!.absolute);
-                            Future.value(uploadTask).then((value) async {
-                              var newurl = await ref.getDownloadURL();
-                              signUp(email.text, password.text, newurl);
-                              // postdetailsrealtimedatabase(newurl);
-                              // databaseRef.child('1').set({
-                              //   /*'id': '1212',
-                              //   'title': newurl.toString()*/
-                              // });
-                              debugPrint(errorMessage);
+                            if (email.text.isNotEmpty && number.text.isEmpty) {
+                              firebase_storage.UploadTask uploadTask =
+                                  ref.putFile(_image!.absolute);
+                              Future.value(uploadTask).then((value) async {
+                                debugPrint("yahan hoon");
+                                var newurl = await ref.getDownloadURL();
+                                signUp(email.text, password.text, newurl);
+                                // postdetailsrealtimedatabase(newurl);
+                                // databaseRef.child('1').set({
+                                //   /*'id': '1212',
+                                //   'title': newurl.toString()*/
+                                // });
+                                debugPrint(errorMessage);
+                              }).onError((error, stackTrace) {});
+                            } else {
+                              firebase_storage.UploadTask uploadTask =
+                                  ref.putFile(_image!.absolute);
+                              Future.value(uploadTask).then((value) async {
+                                debugPrint("ma yahan ni hoon");
+                                var newurl = await ref.getDownloadURL();
+                                signUpWithPhoneNumber(
+                                    number.text, password.text, newurl);
+                              });
                             }
-                            ).onError((error, stackTrace) {});
-                            Future.value().then((value) async{
-                              var newurl = await ref.getDownloadURL();
-                              signUpWithPhoneNumber(number.text, password.text, newurl);
-                            });
                           }
                           // Future.delayed(const Duration(seconds: 30), () {
                           //   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -626,12 +637,6 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                       showDialogBox();
                       _loading = false;
                     }
-
-                    // if(email == RegExpMatch){
-                    //   return signUp(email.text, password.text, newUrl );
-                    // } else{
-                    //   return signUpWithPhoneNumber(number.text, password.text, newUrl );
-                    // }
                   },
                 ),
               ),
@@ -672,27 +677,99 @@ class _MyCustomFormSate extends State<MyCustomForm> {
     }
   }
 
-  Future<void> signUpWithPhoneNumber(String number, String password, String newUrl) async {
+  signUpWithPhoneNumber(String number, String password, String newUrl) async {
     if (_formKey.currentState!.validate()) {
       try {
         setState(() {
           _loading = true;
         });
         await _auth.verifyPhoneNumber(
-          phoneNumber: number,
+          phoneNumber: ("+92$number"),
+          timeout: const Duration(seconds: 60),
           verificationCompleted: (PhoneAuthCredential credential) async {
-            await _auth.signInWithCredential(credential);
-            postdetailsrealtimedatabase(newUrl);
+            Navigator.of(context).pop();
+
+            UserCredential result = await _auth.signInWithCredential(credential);
+
+            User? user = result.user;
+
+            if(user != null){
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => Login()));
+              _signOut();
+            }else{
+              debugPrint("Error");
+            }
           },
           verificationFailed: (FirebaseAuthException e) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                content: Text("Sign up failed Try again later !")));
+            setState(() {
+              _loading = false;
+            });
+            // errorMessage.toString();
           },
-          codeSent: (String verificationId, int? resendToken) async {
-            String smsCode = "123456";
-            PhoneAuthCredential credential = PhoneAuthProvider.credential(verificationId: verificationId, smsCode: smsCode);
-            await _auth.signInWithCredential(credential);
-            postdetailsrealtimedatabase(newUrl);
+          codeSent: (String verificationId, int? token) {
+            showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (context) {
+                  return AlertDialog(
+                    title: Text("Give the code?"),
+                    content: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        TextField(
+                          controller: _codeController,
+                        ),
+                      ],
+                    ),
+                    actions: <Widget>[
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xffA87B5D),
+                            foregroundColor: Colors.white),
+                        onPressed: () async {
+                          final code = _codeController.text.trim();
+                          AuthCredential credential =
+                              PhoneAuthProvider.credential(
+                                  verificationId: verificationId,
+                                  smsCode: code);
+
+                          UserCredential userCredential =
+                              await _auth.signInWithCredential(credential);
+
+                          User? user = userCredential.user;
+
+                          if (user != null) {
+                            postdetailsrealtimedatabase(newUrl);
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => Login()));
+                            _signOut();
+                          } else {
+                            debugPrint("Error");
+                          }
+                        },
+                        child: const Text("Confirm"),
+                      )
+                    ],
+                  );
+                });
+            // Navigator.push(
+            //   context,
+            //   MaterialPageRoute(
+            //     builder: (context) => Verifyscreen(
+            //       verificationId: verificationId,
+            //     ),
+            //   ),
+            // );
           },
-          codeAutoRetrievalTimeout: (String verificationId) {
+          codeAutoRetrievalTimeout: (e) {
+            errorMessage.toString();
           },
         );
       } on FirebaseAuthException catch (error) {
@@ -713,7 +790,6 @@ class _MyCustomFormSate extends State<MyCustomForm> {
     }
   }
 
-
   // on FirebaseAuthException catch (error) {
   //   errorMessage = 'An error has occurred.';
   //   debugPrint(error.code);
@@ -730,6 +806,9 @@ class _MyCustomFormSate extends State<MyCustomForm> {
   //     SnackBar(content: Text(errorMessage)),
   //   );
   // }
+  Future<void> _signOut() async {
+    await FirebaseAuth.instance.signOut();
+  }
 
   postdetailsrealtimedatabase(String newurl) async {
     print("callfunction");

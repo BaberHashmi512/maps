@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:form_field_validator/form_field_validator.dart';
 import 'package:image_picker/image_picker.dart';
@@ -13,6 +14,7 @@ import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:maps/Screens/Login.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:http/http.dart' as http;
+import 'package:pin_code_fields/pin_code_fields.dart';
 import 'Verifyscreen.dart';
 
 const List<String> list = <String>[
@@ -689,17 +691,16 @@ class _MyCustomFormSate extends State<MyCustomForm> {
           verificationCompleted: (PhoneAuthCredential credential) async {
             Navigator.of(context).pop();
 
-            UserCredential result = await _auth.signInWithCredential(credential);
+            UserCredential result =
+                await _auth.signInWithCredential(credential);
 
             User? user = result.user;
 
-            if(user != null){
+            if (user != null) {
               Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => Login()));
+                  context, MaterialPageRoute(builder: (context) => Login()));
               _signOut();
-            }else{
+            } else {
               debugPrint("Error");
             }
           },
@@ -717,13 +718,38 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                 barrierDismissible: false,
                 builder: (context) {
                   return AlertDialog(
-                    title: Text("Give the code?"),
+                    title: const Text(
+                      "Give the code?",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                     content: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: <Widget>[
-                        TextField(
+                        PinCodeTextField(
+                          appContext: context,
                           controller: _codeController,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
+                            FilteringTextInputFormatter.digitsOnly
+                          ],
+                          length: 6,
+                          onChanged: (value) {
+                            print(value);
+                          },
+                          pinTheme: PinTheme(
+                            shape: PinCodeFieldShape.box,
+                            borderRadius: BorderRadius.circular(5),
+                            fieldHeight: 40,
+                            fieldWidth: 30,
+                            inactiveColor: Colors.brown,
+                            activeColor: Colors.deepOrange,
+                            selectedColor: Colors.brown,
+                          ),
                         ),
+                        // TextField(
+                        //   controller: _codeController,
+                        // ),
                       ],
                     ),
                     actions: <Widget>[
@@ -731,6 +757,32 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                         style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xffA87B5D),
                             foregroundColor: Colors.white),
+                        child: !_loading
+                            ? Row(
+                                children: const [
+                                  SizedBox(
+                                    height: 30,
+                                    width: 30,
+                                    child: CircularProgressIndicator(
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                          Colors.white),
+                                      strokeWidth: 1.5,
+                                    ),
+                                  ),
+                                  Padding(padding: EdgeInsets.only(left: 10)),
+                                  Text(
+                                    "Please Wait",
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 15),
+                                  ),
+                                ],
+                              )
+                            : const Text(
+                                "Confirm",
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold, fontSize: 20),
+                              ),
                         onPressed: () async {
                           final code = _codeController.text.trim();
                           AuthCredential credential =
@@ -754,7 +806,6 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                             debugPrint("Error");
                           }
                         },
-                        child: const Text("Confirm"),
                       )
                     ],
                   );

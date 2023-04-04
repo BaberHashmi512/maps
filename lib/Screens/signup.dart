@@ -38,7 +38,6 @@ class Signup extends StatefulWidget {
 class _SignupState extends State<Signup> {
   final referDatabasse = FirebaseDatabase.instance.ref("User");
 
-//  int? _value = 1;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -97,7 +96,6 @@ class _MyCustomFormSate extends State<MyCustomForm> {
   File? _image;
   final picker = ImagePicker();
 
-  // bool loading = false;
   firebase_storage.FirebaseStorage storage =
       firebase_storage.FirebaseStorage.instance;
   DatabaseReference databaseRef = FirebaseDatabase.instance.ref('User');
@@ -456,12 +454,6 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                   if (value.isEmpty) {
                     return 'Please Re-Enter Password';
                   }
-                  // if (value.length < 8) {
-                  //   return 'Passwprd must be 8 Character long';
-                  // }
-                  // if (!RegExp(r'[!@#$%^&*(),.?:|<>]').hasMatch(value)) {
-                  //   return 'Password must contain at least one Special Character';
-                  // }
                   print(password.text);
                   print(Confirmpassword.text);
                   if (password.text != Confirmpassword.text) {

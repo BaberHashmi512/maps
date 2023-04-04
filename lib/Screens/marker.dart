@@ -22,78 +22,15 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-
   late StreamSubscription subscription;
   var isDeviceConnected = false;
   bool isAlertSet = false;
 
-  getConnectivity() =>
-      subscription = Connectivity().onConnectivityChanged.listen(
-        (ConnectivityResult result) async {
-          isDeviceConnected = await InternetConnectionChecker().hasConnection;
-          if (!isDeviceConnected && isAlertSet == false) {
-            showDialogBox();
-            setState(() => isAlertSet = true);
-          }
-        },
-      );
-
-  getUserCurrentLocation() async {
-    await Geolocator.requestPermission()
-        .then((value) {})
-        .onError((error, stackTrace) {
-      print("error==>>$error");
-    });
-    requestLocationPermission();
-    await Geolocator.getCurrentPosition().then((value) async {
-      print("My Current Location");
-      // print(value.latitude.toString() +
-      //     "     " +
-      //     value.longitude.toString());
-      List<Placemark> placemarks =
-          await placemarkFromCoordinates(value.latitude, value.longitude);
-      setState(() {
-        LatitudeAddress = value.latitude;
-        longitudeAddress = value.longitude;
-        // print("longitudeAddress+  " " + LatitudeAddress");
-        address =
-            "${placemarks.reversed.last.subLocality} ${placemarks.reversed.last.locality} ${placemarks.reversed.last.country}";
-        print("address");
-        print(address);
-        ref.child(FirebaseAuth.instance.currentUser!.uid).update(
-          {
-            "location": address,
-            "lat": LatitudeAddress,
-            "long": longitudeAddress
-          },
-        ).then((value) {
-          Fluttertoast.showToast(
-              msg: "Location Added Successfully",
-              toastLength: Toast.LENGTH_SHORT,
-              gravity: ToastGravity.CENTER,
-              timeInSecForIosWeb: 1,
-              backgroundColor: const Color(0xffA87B5D),
-              textColor: Colors.white,
-              fontSize: 16.0);
-        }).onError((error, stackTrace) {
-          Fluttertoast.showToast(
-              msg: "Something went wrong try again",
-              toastLength: Toast.LENGTH_SHORT,
-              gravity: ToastGravity.CENTER,
-              timeInSecForIosWeb: 1,
-              backgroundColor: Colors.red,
-              textColor: Colors.white,
-              fontSize: 16.0);
-        });
-      });
-    });
-  }
-
   String address = "";
   double? longitudeAddress;
-  double? LatitudeAddress;
+  double? latitudeAddress;
 
-  Future<bool>_onWillPop() async {
+  Future<bool> _onWillPop() async {
     SystemNavigator.pop();
     return false;
   }
@@ -171,142 +108,112 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return RefreshIndicator(
-      displacement: 250,
-      backgroundColor: Colors.yellow,
-      color: Colors.red,
-      strokeWidth: 3,
-      triggerMode: RefreshIndicatorTriggerMode.onEdge,
-      onRefresh: () async {
-        await hello();
-      },
-      child: WillPopScope(
-        onWillPop: _onWillPop,
-        child: SafeArea(
-          child: Scaffold(
-            body:
-              // StreamView(Stream.fromFuture(hello())),
-                // if (!snapshot.hasData || snapshot.data == null) {
-                //   return const CircularProgressIndicator();
-                // }
-                // Map<String,dynamic> userData = snapshot.data!.snapshot.value;
-                // List<Marker> newMarkers = [];
-                // userData.forEach((key, value) {
-                //   double latitude = value["lat"];
-                //   double longitude = value["long"];
-                //   String userName = value["firsname"];
-                //   Marker newMarker = Marker(
-                //     markerId: MarkerId(key),
-                //     position: LatLng(latitude, longitude),
-                //     infoWindow: InfoWindow(title: userName ),
-                //   );
-                //   newMarkers.add(newMarker);
-                // });
-                GoogleMap(
-                  onMapCreated: (GoogleMapController controller) {
-                    googleMapController = controller;
-                  },
-                  initialCameraPosition: const CameraPosition(
-                    target: LatLng(30.157457, 71.524918),
-                    zoom: 14.4746,
-                  ),
-                  myLocationButtonEnabled: true,
-                  markers: Set<Marker>.of(markers),
-                ),
-            floatingActionButton: Column(
-              children: [
-                Container(
-                    padding: const EdgeInsets.only(bottom: 518, right: 10),
-                    child: TextButton(
-                        onPressed: () {
-                          showDialog(
-                              context: context,
-                              builder: (BuildContext context) => AlertDialog(
-                                    title: const Text("Logout"),
-                                    content: const Text(
-                                      "Do you really want to Log out?",
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.black),
-                                    ),
-                                    actions: [
-                                      TextButton(
-                                          onPressed: () {
-                                            Navigator.pop(context);
-                                          },
-                                          child: const Text(
-                                            "Cancel",
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.greenAccent),
-                                          )),
-                                      TextButton(
-                                          onPressed: () {
-                                            // Navigator.pushReplacement(
-                                            //     context,
-                                            //     MaterialPageRoute(
-                                            //         builder: (BuildContext
-                                            //                 context) =>
-                                            //             Login()));
-                                            Navigator.pushAndRemoveUntil(
-                                                context,
-                                                MaterialPageRoute(
-                                                    builder: (context) =>
-                                                        Login()),
-                                                (route) => false);
-                                            // Get.to(() => Login());
-                                          },
-                                          child: const Text(
-                                            "Logout",
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.redAccent),
-                                          )),
-                                    ],
-                                  ));
-                        },
-                        child: Padding(
-                            padding: const EdgeInsets.only(left: 60, top: 50),
-                            child: Container(
-                                color: Colors.red,
-                                child: const Icon(
-                                  Icons.exit_to_app,
-                                  size: 40,
-                                  color: Colors.white,
-                                )),
-                        ))),
-                Container(
-                  width: 120,
-                  height: 160,
-                  padding:
-                      const EdgeInsets.only(bottom: 100, left: 90, top: 10),
-                  child: FloatingActionButton(
-                    child: const Icon(Icons.gps_fixed),
-                    onPressed: () async {
-                      try {
-                        Position position = await _determinePosition();
-                        googleMapController
-                            .animateCamera(CameraUpdate.newCameraPosition(
-                          CameraPosition(
-                            target:
-                                LatLng(position.latitude, position.longitude),
-                            zoom: 14.0,
-                          ),
-                        ));
-                        await hello();
-                      } catch (e) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text(e.toString()),
-                        ));
-                      }
-                    },
-                    // label: const Text("Current Location"),
-                    // icon: const Icon(Icons.calculate),
-                    // backgroundColor: const Color(0xffA87B5D),
-                  ),
-                ),
-              ],
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: SafeArea(
+        child: Scaffold(
+          body: GoogleMap(
+            onMapCreated: (GoogleMapController controller) {
+              googleMapController = controller;
+            },
+            initialCameraPosition: const CameraPosition(
+              target: LatLng(30.157457, 71.524918),
+              zoom: 14.4746,
             ),
+            myLocationButtonEnabled: true,
+            markers: Set<Marker>.of(markers),
+          ),
+          floatingActionButton: Column(
+            children: [
+              Container(
+                  padding: const EdgeInsets.only(bottom: 518, right: 10),
+                  child: TextButton(
+                      onPressed: () {
+                        showDialog(
+                            context: context,
+                            builder: (BuildContext context) => AlertDialog(
+                                  title: const Text("Logout"),
+                                  content: const Text(
+                                    "Do you really want to Log out?",
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black),
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                        onPressed: () {
+                                          Navigator.pop(context);
+                                        },
+                                        child: const Text(
+                                          "Cancel",
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.greenAccent),
+                                        )),
+                                    TextButton(
+                                        onPressed: () {
+                                          // Navigator.pushReplacement(
+                                          //     context,
+                                          //     MaterialPageRoute(
+                                          //         builder: (BuildContext
+                                          //                 context) =>
+                                          //             Login()));
+                                          Navigator.pushAndRemoveUntil(
+                                              context,
+                                              MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      Login()),
+                                              (route) => false);
+                                          // Get.to(() => Login());
+                                        },
+                                        child: const Text(
+                                          "Logout",
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.redAccent),
+                                        )),
+                                  ],
+                                ));
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 60, top: 50),
+                        child: Container(
+                            color: Colors.red,
+                            child: const Icon(
+                              Icons.exit_to_app,
+                              size: 40,
+                              color: Colors.white,
+                            )),
+                      ))),
+              Container(
+                width: 120,
+                height: 160,
+                padding: const EdgeInsets.only(bottom: 100, left: 90, top: 10),
+                child: FloatingActionButton(
+                  child: const Icon(Icons.gps_fixed),
+                  onPressed: () async {
+                    try {
+                      Position position = await _determinePosition();
+                      googleMapController
+                          .animateCamera(CameraUpdate.newCameraPosition(
+                        CameraPosition(
+                          target: LatLng(position.latitude, position.longitude),
+                          zoom: 14.0,
+                        ),
+                      ));
+                      await hello();
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text(e.toString()),
+                      ));
+                    }
+                  },
+                  // label: const Text("Current Location"),
+                  // icon: const Icon(Icons.calculate),
+                  // backgroundColor: const Color(0xffA87B5D),
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -333,6 +240,71 @@ class _HomeScreenState extends State<HomeScreen> {
     }
     Position position = await Geolocator.getCurrentPosition();
     return position;
+  }
+
+  getConnectivity() =>
+      subscription = Connectivity().onConnectivityChanged.listen(
+        (ConnectivityResult result) async {
+          isDeviceConnected = await InternetConnectionChecker().hasConnection;
+          if (!isDeviceConnected && isAlertSet == false) {
+            showDialogBox();
+            setState(() => isAlertSet = true);
+          }
+        },
+      );
+
+  getUserCurrentLocation() async {
+    debugPrint("Baber");
+    await Geolocator.requestPermission()
+        .then((value) {})
+        .onError((error, stackTrace) {
+      print("error==>>$error");
+    });
+    requestLocationPermission();
+    await Geolocator.getCurrentPosition().then((value) async {
+      print("My Current Location");
+      // print(value.latitude.toString() +
+      //     "     " +
+      //     value.longitude.toString());
+      List<Placemark> placemarks =
+          await placemarkFromCoordinates(value.latitude, value.longitude);
+      setState(() {
+        latitudeAddress = value.latitude;
+        longitudeAddress = value.longitude;
+        debugPrint("longitudeAddress+  " " + LatitudeAddress");
+        address =
+            "${placemarks.reversed.last.subLocality} ${placemarks.reversed.last.locality} ${placemarks.reversed.last.country}";
+        debugPrint("address");
+        debugPrint(address);
+        ref.child(FirebaseAuth.instance.currentUser!.uid).update(
+          {
+            "location": address,
+            "lat": latitudeAddress,
+            "long": longitudeAddress
+          },
+
+        ).then((value) {
+          debugPrint("Jeeo");
+          Fluttertoast.showToast(
+              msg: "Location Added Successfully",
+              toastLength: Toast.LENGTH_SHORT,
+              gravity: ToastGravity.CENTER,
+              timeInSecForIosWeb: 1,
+              backgroundColor: const Color(0xffA87B5D),
+              textColor: Colors.white,
+              fontSize: 16.0);
+        }).onError((error, stackTrace) {
+          Fluttertoast.showToast(
+              msg: "Something went wrong try again",
+              toastLength: Toast.LENGTH_SHORT,
+              gravity: ToastGravity.CENTER,
+              timeInSecForIosWeb: 1,
+              backgroundColor: Colors.red,
+              textColor: Colors.white,
+              fontSize: 16.0);
+        });
+      });
+    });
   }
 
   requestLocationPermission() async {

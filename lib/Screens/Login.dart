@@ -450,6 +450,9 @@ class _MyCustomFormSate extends State<MyCustomForm> {
             // errorMessage.toString();
           },
           codeSent: (String verificationId, int? token) {
+            setState(() {
+              _loading = false;
+            });
             showDialog(
                 context: context,
                 barrierDismissible: false,
@@ -494,7 +497,7 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                         style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xffA87B5D),
                             foregroundColor: Colors.white),
-                        child: !_loading
+                        child: _loading
                             ? Row(
                                 children: const [
                                   SizedBox(
@@ -531,12 +534,20 @@ class _MyCustomFormSate extends State<MyCustomForm> {
                               await _auth.signInWithCredential(credential);
 
                           User? user = userCredential.user;
-
                           if (user != null) {
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => HomeScreen()));
+                            try {
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => HomeScreen()));
+                            } on FirebaseAuthException catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text("Incorrect Code")),
+                              );
+                              setState(() {
+                                _loading = false;
+                              });
+                            }
                             _signOut();
                           } else {
                             debugPrint("Error");

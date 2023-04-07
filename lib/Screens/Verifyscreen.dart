@@ -105,7 +105,6 @@ class _VerifyscreenState extends State<Verifyscreen> {
                     setState(() {
                       _loading = false;
                     });
-
                   }
                 },
                 child: _loading

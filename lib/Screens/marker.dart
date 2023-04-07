@@ -254,7 +254,6 @@ class _HomeScreenState extends State<HomeScreen> {
       );
 
   getUserCurrentLocation() async {
-    debugPrint("Baber");
     await Geolocator.requestPermission()
         .then((value) {})
         .onError((error, stackTrace) {
@@ -269,6 +268,8 @@ class _HomeScreenState extends State<HomeScreen> {
       List<Placemark> placemarks =
           await placemarkFromCoordinates(value.latitude, value.longitude);
       setState(() {
+        print("Latitude ${value.latitude}");
+        print("Longitude ${value.longitude}");
         latitudeAddress = value.latitude;
         longitudeAddress = value.longitude;
         debugPrint("longitudeAddress+  " " + LatitudeAddress");
@@ -276,15 +277,15 @@ class _HomeScreenState extends State<HomeScreen> {
             "${placemarks.reversed.last.subLocality} ${placemarks.reversed.last.locality} ${placemarks.reversed.last.country}";
         debugPrint("address");
         debugPrint(address);
+        // if (FirebaseAuth.instance.currentUser!= null){
         ref.child(FirebaseAuth.instance.currentUser!.uid).update(
           {
             "location": address,
             "lat": latitudeAddress,
             "long": longitudeAddress
           },
-
         ).then((value) {
-          debugPrint("Jeeo");
+          print("Hashmi");
           Fluttertoast.showToast(
               msg: "Location Added Successfully",
               toastLength: Toast.LENGTH_SHORT,
